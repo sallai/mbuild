@@ -30,7 +30,7 @@ class Atom(Part):
         Every Bond that the Atom is a part of.
 
     """
-    __slots__ = ['index', 'name', 'pos', 'charge', 'parent', 'referrers', 'bonds']
+    # __slots__ = ['index', 'name', 'pos', 'charge', 'parent', 'referrers', 'bonds']
 
     def __init__(self, name, pos=None, charge=0.0):
         super(Atom, self).__init__()
