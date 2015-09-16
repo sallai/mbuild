@@ -9,7 +9,7 @@ from oset import oset as OrderedSet
 class AtomProxy(Atom):
 
     def __getattr__(self, attr):
-        return self.atom.__dict__[attr]
+        return getattr(self.atom, attr)
 
     def __init__(self, atom):
         self.atom = atom
@@ -24,7 +24,7 @@ class AtomProxy(Atom):
 class CompoundProxy(Compound):
 
     def __getattr__(self, attr):
-        return self.compound.__dict__[attr]
+        return getattr(self.compound, attr)
 
     def __init__(self, compound):
         assert(isinstance(compound, Compound))
@@ -55,8 +55,8 @@ def create_proxy(real_thing, memo=None):
         memo = OrderedDict()
 
     proxy = _create_proxy_atoms_and_compounds(real_thing, memo)
-    create_proxy_bonds(real_thing, memo)
-    create_proxy_labels(real_thing, memo)
+    _create_proxy_bonds(real_thing, memo)
+    _create_proxy_labels(real_thing, memo)
 
     return proxy
 
@@ -83,7 +83,7 @@ def _create_proxy_atoms_and_compounds(real_thing, memo):
 
         return proxy
 
-def create_proxy_bonds(real_thing, memo):
+def _create_proxy_bonds(real_thing, memo):
     if is_compound(real_thing):
         proxy = memo[real_thing]
 
@@ -95,9 +95,9 @@ def create_proxy_bonds(real_thing, memo):
                 proxy.add(new_bond)
             # recurse
             if is_compound(part):
-                create_proxy_bonds(part, memo)
+                _create_proxy_bonds(part, memo)
 
-def create_proxy_labels(real_thing, memo):
+def _create_proxy_labels(real_thing, memo):
     if is_compound(real_thing):
         proxy = memo[real_thing]
 
@@ -112,12 +112,13 @@ def create_proxy_labels(real_thing, memo):
         # recurse
         for part in real_thing.parts:
             if is_compound(part):
-                create_proxy_labels(part, memo)
+                _create_proxy_labels(part, memo)
 
 
 if __name__ == '__main__':
     from mbuild.examples.ethane.ethane import Ethane
     c = Ethane()
+    c = create_proxy(c)
     p = create_proxy(c)
 
     print("Top level proxy object: {}".format(p))
