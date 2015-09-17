@@ -39,7 +39,12 @@ class Bond(Part):
             self.kind = '{0}-{1}'.format(atom1.name, atom2.name)
 
         # Ensure Atoms in Bond know about the Bond.
+        if atom1.attached_bonds is None:
+            atom1.attached_bonds = set()
         atom1.attached_bonds.add(self)
+
+        if atom2.attached_bonds is None:
+            atom2.attached_bonds = set()
         atom2.attached_bonds.add(self)
 
     @property

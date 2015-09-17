@@ -13,7 +13,7 @@ def write_mol2(filename, traj):
 
     atoms = list(traj.top.atoms)
     xyz = traj.xyz[0]
-    bonds = list(traj.top.bonds)
+    bonds = list(traj.top.contained_bonds)
 
     with open(filename, 'w') as mol2_file:
         mol2_file.write("@<TRIPOS>MOLECULE\n")

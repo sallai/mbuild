@@ -77,7 +77,7 @@ class Compound(Part):
     ----------
     subcompounds : Parts, optional, default=None
         One or more parts to be added to self.
-    kind : str, optional, default=self.__class__.__name__
+    name : str, optional, default=self.__class__.__name__
         The type of Compound.
     periodicity : np.ndarray, shape=(3,), dtype=float, optional
         The periodic lengths of the Compound in the x, y and z directions.
@@ -85,7 +85,7 @@ class Compound(Part):
 
     Attributes
     ----------
-    kind : str, optional, default=self.__class__.__name__
+    name : str, optional, default=self.__class__.__name__
         The type of Compound.
     periodicity : np.ndarray, shape=(3,), dtype=float, optional
         The periodic lengths of the Compound in the x, y and z directions.
@@ -103,112 +103,56 @@ class Compound(Part):
         Other compounds that reference this part with labels.
 
     """
-    def __init__(self, subcompounds=None, kind=None, name=None, periodicity=None, pos=None, charge=0.0):
+    def __init__(self, name=None, pos=None, charge=0.0, subcompounds=None, periodicity=None):
         super(Compound, self).__init__()
 
-        # TODO: clone/deepcopy pos
         if name:
-            if kind:
-                raise ValueError("both name and kind specified")
             self.name = name
-            kind = name
-
-        if kind:
-            self.kind = kind
         else:
-            self.kind = self.__class__.__name__
+            self.name = self.__class__.__name__
 
         # Position
-        self.pos = np.asarray(pos, dtype=float)
+        if pos is not None:
+            self.pos = np.asarray(pos, dtype=float)
+        else:
+            self.pos = np.zeros(3)
 
-        # TODO: clone/deepcopy pos
-
-        # TODO: clone/deepcopy charge
         self.charge = charge
 
-        # TODO: clone/deepcopy bonds
-        self.attached_bonds = set()
-
-        # TODO: decide if this really has to be added here, if yes, do clone/deepcopy
-        self.index = 0
+        self.attached_bonds = None
 
         # A periodocity of zero in any direction is treated as non-periodic.
         if not periodicity:
             periodicity = np.array([0.0, 0.0, 0.0])
         self._periodicity = periodicity
 
-        self.parts = OrderedSet()
-        self.labels = OrderedDict()
+        self.parts = None
+        self.labels = None
 
         # self.add() must be called after labels and parts are initialized.
         if subcompounds:
             self.add(subcompounds)
 
     @property
-    def atoms(self):
-        """A list of all Atoms in the Compound and sub-Compounds.  """
-        return self.atom_list_by_name(exclude_ports=True)
-
-    def yield_atoms(self):
+    def leaves(self):
         """ """
         for part in self._yield_parts(Compound):
-            if part.parts is None or not part.parts:
+            if not part.parts:
                 yield part
-        # return self._yield_parts(Atom)
-
     @property
-    def n_atoms(self):
+    def n_leaves(self):
         """Return the number of Atoms in the Compound. """
-        return len(self.atoms)
-
-    def atom_list_by_name(self, name='*', exclude_ports=True):
-        """Return a list of Atoms filtered by their name.
-
-        Parameters
-        ----------
-        name : str
-            Return only atoms of this type. '*' indicates all.
-        exclude_ports : bool
-            Exclude Port particles of kind 'G' - reserved for Ports.
-
-        Returns
-        -------
-        atom_list : list
-            List of Atoms matching the inputs.
-
-        """
-        atom_list = []
-        for atom in self.yield_atoms():
-            if not (exclude_ports and atom.name == 'G'):
-                if name == '*':
-                    atom_list.append(atom)
-                elif atom.name == name:
-                    atom_list.append(atom)
-        return atom_list
+        return len(list(self.leaves))
 
     @property
-    def bonds(self):
+    def contained_bonds(self):
         """A list of all Bonds in the Compound and sub-Compounds. """
-        return self.bond_list_by_kind()
-
-    def yield_bonds(self):
-        """ """
         return self._yield_parts(Bond)
 
     @property
-    def n_bonds(self):
+    def n_contained_bonds(self):
         """Return the number of Bonds in the Compound. """
-        return len(self.bonds)
-
-    def bond_list_by_kind(self, kind='*'):
-        """Return a list of Bonds filtered by their kind. """
-        bond_list = []
-        for bond in self.yield_bonds():
-            if kind == '*':
-                bond_list.append(bond)
-            elif bond.kind == kind:
-                bond_list.append(bond)
-        return bond_list
+        return len(list(self.contained_bonds))
 
     def _yield_parts(self, part_type):
         """Yield parts of a specified type in the Compound recursively. """
@@ -235,29 +179,21 @@ class Compound(Part):
     def xyz(self):
         """Return all atom coordinates in this compound. """
         arr = np.fromiter(itertools.chain.from_iterable(
-            atom.pos for atom in self.yield_atoms() if atom.name != 'G'), dtype=float)
+            atom.pos for atom in self.leaves if atom.name != 'G'), dtype=float)
         return arr.reshape((-1, 3))
 
     @property
     def xyz_with_ports(self):
         """Return all atom coordinates in this compound including ports. """
         arr = np.fromiter(itertools.chain.from_iterable(
-            atom.pos for atom in self.yield_atoms()), dtype=float)
+            atom.pos for atom in self.leaves), dtype=float)
         return arr.reshape((-1, 3))
 
     @property
     def center(self):
         """The cartesian center of the Compound based on its Atoms. """
-        xyz = self.xyz
-        if xyz.any():
+        if self.xyz.any():
             return np.mean(self.xyz, axis=0)
-        else:  # It's a port or an empty compound.
-            atoms = self.atom_list_by_name('G', exclude_ports=False)
-            try:
-                return sum(atom.pos for atom in atoms) / len(atoms)
-            except ZeroDivisionError as err:
-                print('Compound contains no atoms.')
-                raise err
 
     @property
     def boundingbox(self):
@@ -271,30 +207,31 @@ class Compound(Part):
         d = np.where(d > 0.5 * self.periodicity, self.periodicity - d, d)
         return np.sqrt((d ** 2).sum(axis=-1))
 
-    def atoms_in_range(self, atom, dmax, max_atoms=20, atom_kdtree=None, atom_array=None):
+    def leaves_in_range(self, compound, dmax, max_leaves=20, leaf_kdtree=None, leaf_array=None):
         """Find atoms within a specified range of another atom. """
-        if atom_kdtree is None:
-            atom_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
-        _, idxs = atom_kdtree.query(atom.pos, k=max_atoms, distance_upper_bound=dmax)
-        idxs = idxs[idxs != self.n_atoms]
-        if atom_array is None:
-            atom_array = np.array(self.atoms)
-        return atom_array[idxs]
+        if leaf_kdtree is None:
+            leaf_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
+        _, idxs = leaf_kdtree.query(compound.pos, k=max_leaves, distance_upper_bound=dmax)
+        # TODO: why we are doing this
+        idxs = idxs[idxs != self.n_leaves]
+        if leaf_array is None:
+            leaf_array = np.fromiter(self.leaves)
+        return leaf_array[idxs]
 
-    def add_bonds(self, type_a, type_b, dmin, dmax, kind=None):
+    def add_bonds(self, name_a, name_b, dmin, dmax, kind=None):
         """Add Bonds between all pairs of types a/b within [dmin, dmax]. """
-        atom_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
-        atom_array = np.array(self.atoms)
+        leaf_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
+        leaf_array = np.array(self.atoms)
         added_bonds = list()
-        for a1 in self.atom_list_by_name(type_a):
+        for a1 in self.atom_list_by_name(name_a):
             nearest = self.atoms_in_range(a1, dmax, max_atoms=20,
-                                          atom_kdtree=atom_kdtree,
-                                          atom_array=atom_array)
+                                          atom_kdtree=leaf_kdtree,
+                                          atom_array=leaf_array)
             for a2 in nearest:
                 bond_tuple = (a1, a2) if id(a1) < id(a2) else (a2, a1)
                 if bond_tuple in added_bonds:
                     continue
-                if (a2.name == type_b) and (dmin <= self.min_periodic_distance(a2.pos, a1.pos) <= dmax):
+                if (a2.name == name_b) and (dmin <= self.min_periodic_distance(a2.pos, a1.pos) <= dmax):
                     self.add(Bond(a1, a2, kind=kind))
                     added_bonds.append(bond_tuple)
 
@@ -324,6 +261,12 @@ class Compound(Part):
             for part in new_part:
                 self.add(part)
             return
+
+        # Create parts and labels on the first add operation
+        if self.parts is None:
+            self.parts = OrderedSet()
+        if self.labels is None:
+            self.labels = OrderedDict()
 
         if not isinstance(new_part, Part):
             raise ValueError('Only objects that inherit from mbuild.Part '
@@ -380,16 +323,17 @@ class Compound(Part):
             self._remove_references(removed_part)
 
         # Remove the part recursively from sub-compounds.
-        for part in self.parts:
-            if isinstance(part, Compound) and len(objs_to_remove) > 0:
-                part.remove(objs_to_remove)
+        if self.parts:
+            for part in self.parts:
+                if isinstance(part, Compound) and len(objs_to_remove) > 0:
+                    part.remove(objs_to_remove)
 
     @staticmethod
     def _remove_bonds(removed_part):
         """If removing an atom, make sure to remove the bonds it's part of. """
         if isinstance(removed_part, Atom):
-            for bond in removed_part.bonds:
-                bond.other_atom(removed_part).bonds.remove(bond)
+            for bond in removed_part.contained_bonds:
+                bond.other_atom(removed_part).contained_bonds.remove(bond)
                 if bond.parent is not None:
                     bond.parent.remove(bond)
 
@@ -516,42 +460,42 @@ class Compound(Part):
         # tempdir = tempfile.mkdtemp(prefix='mbuild_view_hierarchy_')
         #
         # compound_tree = nx.DiGraph()
-        # compound_tree.add_node(self.kind)
-        # compound_frequency = Counter([self.kind])
+        # compound_tree.add_node(self.name)
+        # compound_frequency = Counter([self.name])
         # for sub_compound in self._yield_parts(Compound):
-        #     if not show_ports and sub_compound.kind in ["Port", "subport"]:
+        #     if not show_ports and sub_compound.name in ["Port", "subport"]:
         #         continue
-        #     compound_frequency[sub_compound.kind] += 1
-        #     compound_tree.add_node(sub_compound.kind)
+        #     compound_frequency[sub_compound.name] += 1
+        #     compound_tree.add_node(sub_compound.name)
         #     if sub_compound.parent:
-        #         compound_tree.add_edge(sub_compound.parent.kind, sub_compound.kind)
+        #         compound_tree.add_edge(sub_compound.parent.name, sub_compound.name)
         #
         # labels = {"'children'": '"children"'}
         # for compound in compound_tree:
         #     node_key = "'{}'".format(compound)
         #     labels[node_key] = '"{} {:d}"'.format(compound, compound_frequency[compound])
         #
-        # json_template = json_graph.tree_data(compound_tree, self.kind,
+        # json_template = json_graph.tree_data(compound_tree, self.name,
         #                                      dict(id="name", children="children"))
         # json_template = str(json_template)
         # for label in labels:
         #     json_template = json_template.replace(label, labels[label])
         #
         # # generate png image from the compound
-        # self.save_png(os.path.join(tempdir, 'visualize_{}.png'.format(self.kind)), show_ports=show_ports)
-        # sub_compounds_dict = {labels["'{}'".format(self.kind)]:"visualize_{}".format(self.kind)}
+        # self.save_png(os.path.join(tempdir, 'visualize_{}.png'.format(self.name)), show_ports=show_ports)
+        # sub_compounds_dict = {labels["'{}'".format(self.name)]:"visualize_{}".format(self.name)}
         #
         # # generate png image from all subcompounds
         # for sub_compound in self._yield_parts(Compound):
-        #     if not show_ports and sub_compound.kind in ["Port", "subport"]:
+        #     if not show_ports and sub_compound.name in ["Port", "subport"]:
         #         continue
-        #     if labels["'{}'".format(sub_compound.kind)] not in sub_compounds_dict.keys():
-        #         if not show_ports and sub_compound.kind in ["Port", "subport"]:
+        #     if labels["'{}'".format(sub_compound.name)] not in sub_compounds_dict.keys():
+        #         if not show_ports and sub_compound.name in ["Port", "subport"]:
         #             continue
-        #         sub_compound.save_png(os.path.join(tempdir, 'visualize_{}.png'.format(sub_compound.kind)), show_ports=show_ports)
+        #         sub_compound.save_png(os.path.join(tempdir, 'visualize_{}.png'.format(sub_compound.name)), show_ports=show_ports)
         #
-        #         label = labels["'{}'".format(sub_compound.kind)]
-        #         sub_compounds_dict[label] = "visualize_{}".format(sub_compound.kind)
+        #         label = labels["'{}'".format(sub_compound.name)]
+        #         sub_compounds_dict[label] = "visualize_{}".format(sub_compound.name)
         #
         # for key in sub_compounds_dict:
         #     filename = sub_compounds_dict[key]
@@ -576,15 +520,24 @@ class Compound(Part):
 
     def _to_json(self, show_ports=False):
         atoms = list()
-        for idx, atom in enumerate(self.atom_list_by_name(exclude_ports=not show_ports)):
-            atom.index = idx
-            atoms.append({'element': atom.name,
-                          'location': list(atom.pos * 10)})
+        for idx, leaf in enumerate(self.leaves):
+            if not show_ports and leaf.name == 'G':
+                continue
+            leaf.index = idx
+            atoms.append({'element': leaf.name,
+                          'location': list(leaf.pos * 10)})
 
         bonds = [{'atoms': [bond.atom1.index, bond.atom2.index],
                   'order': 1}
-                 for bond in self.yield_bonds()]
-        output = {'name': self.kind, 'atoms': atoms, 'bonds': bonds}
+                 for bond in self.contained_bonds]
+        output = {'name': self.name, 'atoms': atoms, 'bonds': bonds}
+
+        # remove the index member variable
+        for idx, leaf in enumerate(self.leaves):
+            if not show_ports and leaf.name == 'G':
+                continue
+            del leaf.index
+
         return imolecule.json_formatter.compress(output)
 
     # Interface to Trajectory for reading/writing .pdb and .mol2 files.
@@ -604,10 +557,10 @@ class Compound(Part):
 
         """
         if coords_only:
-            if traj.n_atoms != self.n_atoms:
+            if traj.n_atoms != self.n_leaves:
                 raise ValueError('Number of atoms in {traj} does not match {self}'.format(**locals()))
-            for mdtraj_atom, mbuild_atom in zip(traj.topology.atoms, self.atoms):
-                mbuild_atom.pos = traj.xyz[frame, mdtraj_atom.index]
+            for mdtraj_atom, leaf in zip(traj.topology.atoms, self.leaves):
+                leaf.pos = traj.xyz[frame, mdtraj_atom.index]
             return
 
         atom_mapping = dict()
@@ -619,7 +572,7 @@ class Compound(Part):
                 chain_compound = self
             for res in chain.residues:
                 for atom in res.atoms:
-                    new_atom = Atom(str(atom.name), traj.xyz[frame, atom.index])
+                    new_atom = Atom(name=str(atom.name), pos=traj.xyz[frame, atom.index])
                     chain_compound.add(new_atom, label='{0}[$]'.format(atom.name))
                     atom_mapping[atom] = new_atom
 
@@ -651,8 +604,8 @@ class Compound(Part):
         mbuild.topology
 
         """
-        exclude = not show_ports
-        atom_list = self.atom_list_by_name('*', exclude_ports=exclude)
+        atom_list = [leaf for leaf in self.leaves if show_ports or leaf.name != 'G']
+
         top = self._to_topology(atom_list, chain_types, residue_types)
 
         # Coordinates.
@@ -757,7 +710,7 @@ class Compound(Part):
                 except ValueError:  # Already gone.
                     pass
 
-        for bond in self.bonds:
+        for bond in self.contained_bonds:
             atom1 = bond.atom1
             atom2 = bond.atom2
             # Ensure that both atoms are part of the compound. This becomes an
@@ -792,7 +745,7 @@ class Compound(Part):
         intermol_system = System()
 
         last_molecule_compound = None
-        for atom_index, atom in enumerate(self.atoms):
+        for atom_index, atom in enumerate(self.leaves):
             for parent in atom.ancestors():
                 # Don't want inheritance via isinstance().
                 if type(parent) in molecule_types:
@@ -828,7 +781,7 @@ class Compound(Part):
         for index, parent_atom in enumerate(parent.atoms):
             parent_atom.index = index + 1
 
-        for bond in parent.bonds:
+        for bond in parent.contained_bonds:
             intermol_bond = InterMolBond(bond.atom1.index, bond.atom2.index)
             molecule_type.bonds.add(intermol_bond)
 
@@ -846,7 +799,7 @@ class Compound(Part):
 
     def __repr__(self):
         descr = ['<{:s}, {:d} atoms, {:d} bonds, '.format(
-            self.kind, self.n_atoms, self.n_bonds
+            self.name, self.n_leaves, self.n_contained_bonds
         )]
         if any(self.periodicity):
             descr.append('periodicity: {}'.format(self.periodicity))
@@ -879,91 +832,60 @@ class Compound(Part):
         # Remember that we're cloning the new one of self.
         clone_of[self] = newone
 
-        newone.kind = self.kind
+        newone.name = self.name
         newone.periodicity = deepcopy(self.periodicity)
+        newone.pos = self.pos
+        newone.charge = self.charge
 
-        # Create empty containers.
-        newone.parts = OrderedSet()
-        newone.labels = OrderedDict()
+        # Create empty containers if necessary
+        if self.parts:
+            newone.parts = OrderedSet()
+        else:
+            newone.parts = None
+
+        if self.labels:
+            newone.labels = OrderedDict()
+        else:
+            newone.labels = None
+
+        if self.attached_bonds:
+            newone.attached_bonds = set()
+        else:
+            newone.attached_bonds = None
+
         newone.referrers = set()
 
         # Parent should be None initially.
         newone.parent = None
 
         # Add parts to clone.
-        for part in self.parts:
-            if isinstance(part, Bond) and part.has_atoms_outside_of(root_container):
-                # Ignore bonds with atoms outside the hierarchy.
-                continue
-            else:
-                newpart = clone(part, clone_of, root_container)
-                newone.parts.add(newpart)
-                newpart.parent = newone
+        if self.parts:
+            for part in self.parts:
+                if isinstance(part, Bond) and part.has_atoms_outside_of(root_container):
+                    # Ignore bonds with atoms outside the hierarchy.
+                    continue
+                else:
+                    newpart = clone(part, clone_of, root_container)
+                    newone.parts.add(newpart)
+                    newpart.parent = newone
 
         # Copy labels, except bonds with atoms outside the hierarchy.
-        for label, part in self.labels.items():
-            if isinstance(part, Bond) and part.has_atoms_outside_of(root_container):
-                # Ignore bonds with atoms outside the hierarchy.
-                continue
-            else:
-                if not isinstance(part, list):
-                    newone.labels[label] = clone(part, clone_of, root_container)
-                    part.referrers.add(clone_of[part])
+        if self.labels:
+            for label, part in self.labels.items():
+                if isinstance(part, Bond) and part.has_atoms_outside_of(root_container):
+                    # Ignore bonds with atoms outside the hierarchy.
+                    continue
                 else:
-                    # Part is a list of parts, so we create an empty list, and
-                    # add the clones of the original list elements.
-                    newone.labels[label] = []
-                    for subpart in part:
-                        newone.labels[label].append(clone(subpart, clone_of, root_container))
-                        # Referrers must have been handled already, or the will be handled
-        return newone
-
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        newone = cls.__new__(cls)
-        if len(memo) == 0:
-            memo[0] = self
-        memo[id(self)] = newone
-
-        # First copy those attributes that don't need deepcopying.
-        newone.kind = deepcopy(self.kind, memo)
-        newone.periodicity = deepcopy(self.periodicity, memo)
-
-        # Create empty containers.
-        newone.parts = OrderedSet()
-        newone.labels = OrderedDict()
-        newone.referrers = set()
-
-        # Copy the parent of everyone, except topmost Compound being deepcopied.
-        if memo[0] == self:
-            newone.parent = None
-        else:
-            newone.parent = deepcopy(self.parent, memo)
-
-        # Copy parts, except bonds with atoms outside the hierarchy.
-        for part in self.parts:
-            if isinstance(part, Bond):
-                if memo[0] in part.atom1.ancestors() and memo[0] in part.atom2.ancestors():
-                    newone.parts.add(deepcopy(part, memo))
-            else:
-                newone.parts.add(deepcopy(part, memo))
-
-        # Copy labels, except bonds with atoms outside the hierarchy
-        for label, part in self.labels.items():
-            if isinstance(part, Bond):
-                if memo[0] in part.atom1.ancestors() and memo[0] in part.atom2.ancestors():
-                    newone.labels[label] = deepcopy(part, memo)
-                    newone.labels[label].referrers.add(newone)
-            else:
-                newone.labels[label] = deepcopy(part, memo)
-                if not isinstance(newone.labels[label], list):
-                    newone.labels[label].referrers.add(newone)
-
-        # Copy referrers that do not point out of the hierarchy.
-        for referrer in self.referrers:
-            if memo[0] in referrer.ancestors():
-                newone.referrers.add(deepcopy(referrer, memo))
-
+                    if not isinstance(part, list):
+                        newone.labels[label] = clone(part, clone_of, root_container)
+                        part.referrers.add(clone_of[part])
+                    else:
+                        # Part is a list of parts, so we create an empty list, and
+                        # add the clones of the original list elements.
+                        newone.labels[label] = []
+                        for subpart in part:
+                            newone.labels[label].append(clone(subpart, clone_of, root_container))
+                            # Referrers must have been handled already, or the will be handled
         return newone
 
 Atom = Compound

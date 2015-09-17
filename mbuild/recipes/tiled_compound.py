@@ -25,11 +25,11 @@ class TiledCompound(Compound):
         The Compound to be replicated.
     n_tiles : array-like, shape=(3,), dtype=int, optional, default=(1, 1, 1)
         Number of times to replicate tile in the x, y and z-directions.
-    kind : str, optional, default=tile.kind
+    name : str, optional, default=tile.name
         Descriptive string for the compound.
 
     """
-    def __init__(self, tile, n_tiles, kind=None):
+    def __init__(self, tile, n_tiles, name=None):
         super(TiledCompound, self).__init__()
 
         n_tiles = np.asarray(n_tiles)
@@ -41,9 +41,9 @@ class TiledCompound(Compound):
             raise ValueError('Tile not periodic in at least one of the '
                              'specified dimensions.')
 
-        if kind is None:
-            kind = tile.kind + '-'.join(str(d) for d in n_tiles)
-        self.kind = kind
+        if name is None:
+            name = tile.name + '-'.join(str(d) for d in n_tiles)
+        self.name = name
         self.periodicity = np.array(tile.periodicity * n_tiles)
 
         if all(n_tiles == 1):
@@ -108,7 +108,7 @@ class TiledCompound(Compound):
 
     def _add_tile(self, new_tile, ijk):
         """Add a tile with a label indicating its tiling position. """
-        tile_label = "{0}_{1}".format(self.kind, '-'.join(str(d) for d in ijk))
+        tile_label = "{0}_{1}".format(self.name, '-'.join(str(d) for d in ijk))
         self.add(new_tile, label=tile_label, inherit_periodicity=False)
 
     def _hoist_ports(self, new_tile):

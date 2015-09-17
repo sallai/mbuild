@@ -19,7 +19,7 @@ class CoordinateTransform(object):
     def apply_to(self, A):
         """Apply the coordinate transformation to points in A. """
         if A.ndim == 1:
-            A = np.expand_dims(A, axis=0)
+            A = expand_dims(A, axis=0)
         rows, cols = A.shape
         A_new = hstack([A, ones((rows, 1))])
 
@@ -228,11 +228,10 @@ def vec_angle(v1, v2):
 
 
 def _write_back_atom_positions(compound, arrnx3):
-    from mbuild.atom import Atom
-    if isinstance(compound, Atom):
+    if not compound.parts:
         compound.pos = squeeze(arrnx3)
     else:
-        for atom, coords in zip(compound.yield_atoms(), arrnx3):
+        for atom, coords in zip(compound.leaves, arrnx3):
             atom.pos = coords
 
 
@@ -262,19 +261,19 @@ def _create_equivalence_transform(equiv):
     for pair in equiv:
         if not isinstance(pair, tuple) or len(pair) != 2:
             raise Exception('Equivalence pair not a 2-tuple')
-        if not ((isinstance(pair[0], Compound) and isinstance(pair[1], Compound)) or
-                (isinstance(pair[0], Atom) and isinstance(pair[1], Atom))):
+        if not (isinstance(pair[0], Compound) and isinstance(pair[1], Compound)):
             # TODO: is the Atom and Atom comparison necessary?
             raise Exception('Equivalence pair type mismatch: pair[0] is a {0} '
                             'and pair[1] is a {1}'.format(type(pair[0]), type(pair[1])))
 
-        if isinstance(pair[0], Atom):
+        # TODO: vstack is slow, replace with list concatenation
+        if not pair[0].parts:
             self_points = vstack([self_points, pair[0].pos])
             other_points = vstack([other_points, pair[1].pos])
-        if isinstance(pair[0], Compound):
-            for atom0 in pair[0].yield_atoms():
+        else:
+            for atom0 in pair[0].leaves:
                 self_points = vstack([self_points, atom0.pos])
-            for atom1 in pair[1].yield_atoms():
+            for atom1 in pair[1].leaves:
                 other_points = vstack([other_points, atom1.pos])
 
     T = RigidTransform(self_points, other_points)
@@ -403,17 +402,15 @@ def x_axis_transform(compound, new_origin=None,
     point_on_xy_plane:
 
     """
-    from mbuild.compound import Atom
-
-    if isinstance(new_origin, Atom):
+    if hasattr(new_origin, 'pos'):
         new_origin = new_origin.pos
     elif new_origin is None:
         new_origin = array([0, 0, 0])
-    if isinstance(point_on_x_axis, Atom):
+    if hasattr(point_on_x_axis, 'pos'):
         point_on_x_axis = point_on_x_axis.pos
     elif point_on_x_axis is None:
         point_on_x_axis = array([1.0, 0.0, 0.0])
-    if isinstance(point_on_xy_plane, Atom):
+    if hasattr(point_on_xy_plane, 'pos'):
         point_on_xy_plane = point_on_xy_plane.pos
     elif point_on_xy_plane is None:
         point_on_xy_plane = array([1.0, 1.0, 0.0])

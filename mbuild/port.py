@@ -29,10 +29,10 @@ class Port(Compound):
 
     """
     def __init__(self, anchor=None):
-        super(Port, self).__init__(kind='Port')
+        super(Port, self).__init__(name='Port')
         self.anchor = anchor
 
-        up = Compound(kind='subport')
+        up = Compound(name='subport')
         up.add(Atom(name='G', pos=[0, 0, 0]), 'middle')
         up.add(Atom(name='G', pos=[0, 0.02, 0]), 'top')
         up.add(Atom(name='G', pos=[-0.02, -0.01, 0]), 'left')
@@ -55,7 +55,7 @@ class Port(Compound):
 
         return newone
 
-    def __deepcopy__(self, memo):
-        newone = super(Port, self).__deepcopy__(memo)
-        newone.anchor = deepcopy(self.anchor, memo)
-        return newone
+    @property
+    def center(self):
+        """The cartesian center of the Port"""
+        return np.mean(self.xyz_with_ports, axis=0)

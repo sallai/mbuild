@@ -10,23 +10,16 @@ class Methane(mb.Compound):
         hydrogen = mb.Atom(name='H', pos=[0.1, 0, -0.07])
         self.add(hydrogen, label='HC[$]')
 
-        print(self.atom_list_by_name(exclude_ports=True))
-
-        print(self.atoms)
-
-        print(self.n_atoms)
-
-        ch_bond = mb.Bond(self.atoms[0], self.HC[0])
+        ch_bond = mb.Bond(self.C, self.HC[0])
         self.add(ch_bond)
 
         self.add(mb.Atom(name='H', pos=[-0.1, 0, -0.07]), label='HC[$]')
         self.add(mb.Atom(name='H', pos=[0, 0.1, 0.07]), label='HC[$]')
         self.add(mb.Atom(name='H', pos=[0, -0.1, 0.07]), label='HC[$]')
 
-        self.add(mb.Bond(self.atoms[0], self.HC[1]))
-        self.add(mb.Bond(self.atoms[0], self.HC[2]))
-        self.add(mb.Bond(self.atoms[0], self.HC[3]))
-
+        self.add(mb.Bond(self.C, self.HC[1]))
+        self.add(mb.Bond(self.C, self.HC[2]))
+        self.add(mb.Bond(self.C, self.HC[3]))
 
 def main():
     methane = Methane()
