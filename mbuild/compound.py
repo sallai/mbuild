@@ -13,7 +13,7 @@ from mdtraj.core.element import get_by_symbol
 from mdtraj.core.topology import Topology
 from oset import oset as OrderedSet
 
-from mbuild.atom import Atom
+#from mbuild.atom import Atom
 from mbuild.box import Box
 from mbuild.bond import Bond
 from mbuild.formats.mol2 import write_mol2
@@ -103,13 +103,34 @@ class Compound(Part):
         Other compounds that reference this part with labels.
 
     """
-    def __init__(self, subcompounds=None, kind=None, periodicity=None):
+    def __init__(self, subcompounds=None, kind=None, name=None, periodicity=None, pos=None, charge=0.0):
         super(Compound, self).__init__()
+
+        # TODO: clone/deepcopy pos
+        if name:
+            if kind:
+                raise ValueError("both name and kind specified")
+            self.name = name
+            kind = name
 
         if kind:
             self.kind = kind
         else:
             self.kind = self.__class__.__name__
+
+        # Position
+        self.pos = np.asarray(pos, dtype=float)
+
+        # TODO: clone/deepcopy pos
+
+        # TODO: clone/deepcopy charge
+        self.charge = charge
+
+        # TODO: clone/deepcopy bonds
+        self.attached_bonds = set()
+
+        # TODO: decide if this really has to be added here, if yes, do clone/deepcopy
+        self.index = 0
 
         # A periodocity of zero in any direction is treated as non-periodic.
         if not periodicity:
@@ -130,7 +151,10 @@ class Compound(Part):
 
     def yield_atoms(self):
         """ """
-        return self._yield_parts(Atom)
+        for part in self._yield_parts(Compound):
+            if part.parts is None or not part.parts:
+                yield part
+        # return self._yield_parts(Atom)
 
     @property
     def n_atoms(self):
@@ -188,6 +212,8 @@ class Compound(Part):
 
     def _yield_parts(self, part_type):
         """Yield parts of a specified type in the Compound recursively. """
+        if not self.parts:
+            return
         for part in self.parts:
             # Parts local to the current Compound.
             if isinstance(part, part_type):
@@ -940,3 +966,4 @@ class Compound(Part):
 
         return newone
 
+Atom = Compound

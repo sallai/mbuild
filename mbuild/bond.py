@@ -39,8 +39,8 @@ class Bond(Part):
             self.kind = '{0}-{1}'.format(atom1.name, atom2.name)
 
         # Ensure Atoms in Bond know about the Bond.
-        atom1.bonds.add(self)
-        atom2.bonds.add(self)
+        atom1.attached_bonds.add(self)
+        atom2.attached_bonds.add(self)
 
     @property
     def atom1(self):
@@ -111,8 +111,8 @@ class Bond(Part):
         # Do the rest recursively.
         newone.atom1 = clone(self.atom1, clone_of, root_container)
         newone.atom2 = clone(self.atom2, clone_of, root_container)
-        newone.atom1.bonds.add(newone)
-        newone.atom2.bonds.add(newone)
+        newone.atom1.attached_bonds.add(newone)
+        newone.atom2.attached_bonds.add(newone)
 
         # We set newone.parent in compound.
         return newone
@@ -134,8 +134,8 @@ class Bond(Part):
         # Do the rest recursively.
         newone.atom1 = deepcopy(self.atom1, memo)
         newone.atom2 = deepcopy(self.atom2, memo)
-        newone.atom1.bonds.add(newone)
-        newone.atom2.bonds.add(newone)
+        newone.atom1.attached_bonds.add(newone)
+        newone.atom2.attached_bonds.add(newone)
 
         # Copy parents, except the topmost compound being deepcopied.
         if memo[0] == self:
