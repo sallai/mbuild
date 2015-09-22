@@ -9,29 +9,7 @@ from mbuild.bond import Bond
 from collections import OrderedDict
 from oset import oset as OrderedSet
 
-class AtomProxy(Atom):
-
-    def __getattr__(self, attr):
-        return getattr(self.wrapped, attr)
-
-    def __init__(self, atom):
-        assert(isinstance(atom, Atom))
-        self.wrapped = atom
-        self.index = None
-        self.parent = None
-        self.bonds = set()
-        self.referrers = set()
-
-    def proxy_for(self):
-        if hasattr(self.wrapped,'wrapped'):
-            return self.wrapped.proxy_for()
-        else:
-            return self.wrapped.__class__
-
-    def __repr__(self):
-        return "AtomProxy<{0}>".format(self.wrapped.__repr__())
-
-class CompoundProxy(Compound):
+class Proxy(Compound):
 
     def __getattr__(self, attr):
         return getattr(self.wrapped, attr)
@@ -43,6 +21,8 @@ class CompoundProxy(Compound):
         self.labels = OrderedDict()
         self.parent = None
         self.referrers = set()
+        self.index = None
+        self.attached_bonds = set()
 
     def proxy_for(self):
         if hasattr(self.wrapped,'wrapped'):
@@ -52,20 +32,16 @@ class CompoundProxy(Compound):
 
 
     def __repr__(self):
-        return "CompoundProxy<{0}>".format(self.wrapped.__repr__())
-
+        return "Proxy<{0}>".format(self.wrapped.__repr__())
 
 def is_compound(what):
     return hasattr(what,'parts')
 
-def is_atom(what):
-    return hasattr(what,'name') and hasattr(what, 'pos')
+def is_leaf(what):
+    return hasattr(what,'parts') and not what.parts
 
 def is_bond(what):
     return hasattr(what,'atom1') and hasattr(what, 'atom2')
-
-def is_particle(what):
-    return is_atom(what) or is_compound(what)
 
 def create_proxy(real_thing, memo=None, leaf_classes=None):
     if memo is None:
@@ -81,32 +57,25 @@ def create_proxy(real_thing, memo=None, leaf_classes=None):
     return proxy
 
 def _create_proxy_atoms_and_compounds(real_thing, memo, leaf_classes):
+    assert is_compound(real_thing), 'real_thing has to be a compound'
 
-    if is_atom(real_thing):
-        proxy = AtomProxy(real_thing)
-        memo[real_thing] = proxy
-        return proxy
+    proxy = Proxy(real_thing)
+    memo[real_thing] = proxy
 
-    if is_compound(real_thing):
-        proxy = CompoundProxy(real_thing)
-        memo[real_thing] = proxy
+    if not is_leaf(real_thing):
+        # recursively create proxies for parts
+        # let's do Atoms and Compounds in this recursion (we'll do bonds and labels later)
+        for part in real_thing.parts:
+            if is_bond(part):
+                # it is done later
+                continue
+            if is_compound(part):
+                # recurse
+                part_proxy = _create_proxy_atoms_and_compounds(part, memo, leaf_classes)
+                proxy.add(part_proxy)
 
-        if isinstance(real_thing, leaf_classes) or ( hasattr(real_thing, 'wrapped') and real_thing.proxy_for() in leaf_classes):
-            # we're at a leaf compound, dont recurse
-            return proxy
-        else:
-            # recursively create proxies for parts
-            # let's do Atoms and Compounds in this recursion (we'll do bonds and labels later)
-            for part in real_thing.parts:
-                if is_bond(part):
-                    # it is done later
-                    continue
-                if is_particle(part):
-                    # recurse
-                    part_proxy = _create_proxy_atoms_and_compounds(part, memo, leaf_classes)
-                    proxy.add(part_proxy)
+    return proxy
 
-            return proxy
 
 def _create_proxy_bonds(real_thing, memo):
     if is_compound(real_thing):
@@ -118,19 +87,19 @@ def _create_proxy_bonds(real_thing, memo):
                     new_bond = Bond(memo[part.atom1], memo[part.atom2], part.kind)
                     memo[part] = new_bond
                     memo[real_thing].add(new_bond)
-            # recurse, even if we're in a leaf node, because there might be bonds in there that point out of the compound
-            if is_compound(part):
+            elif not is_leaf(part):
+                # recurse, even if we're in a leaf node, because there might be bonds in there that point out of the compound
                 _create_proxy_bonds(part, memo)
 
 def _create_proxy_labels(real_thing, memo):
-    if is_compound(real_thing):
+    if not is_leaf(real_thing):
 
         # create labels
         for label, part in real_thing.labels.iteritems():
             if isinstance(part, list):
                 # TODO support lists with labels
                 continue
-            if (is_particle(part) or is_bond(part)) and part in memo:
+            if (is_compound(part) or is_bond(part)) and part in memo:
                 memo[real_thing].labels[label] = memo[part]
 
         # recurse
@@ -143,7 +112,8 @@ if __name__ == '__main__':
     from mbuild.examples.ethane.ethane import Ethane
     c = Ethane()
     # c = create_proxy(c)
-    p = create_proxy(c, leaf_classes=mbuild.lib.moieties.ch3.CH3)
+    # p = create_proxy(c, leaf_classes=mbuild.lib.moieties.ch3.CH3)
+    p = create_proxy(c)
 
     print("Top level proxy object: {}".format(p))
 
@@ -151,6 +121,6 @@ if __name__ == '__main__':
     for part in p.parts:
         print(" {}".format(part))
 
-    print("Atoms of top level proxy object:")
-    for atom in p.atoms:
-        print(" {}".format(atom))
+    print("Leaves of top level proxy object:")
+    for leaf in p.leaves:
+        print(" {}".format(leaf))

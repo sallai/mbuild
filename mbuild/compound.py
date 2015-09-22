@@ -817,15 +817,18 @@ class Compound(Part):
                 self, attr))
 
     def __repr__(self):
-        descr = ['<{:s}, {:d} atoms, {:d} bonds, '.format(
-            self.name, self.n_leaves, self.n_contained_bonds
-        )]
-        if any(self.periodicity):
-            descr.append('periodicity: {}'.format(self.periodicity))
+        if self.parts is None:
+            return "<{:s}, pos=({: .4f},{: .4f},{: .4f}; ID: {})>".format(self.name, self.pos[0], self.pos[1], self.pos[2], id(self))
         else:
-            descr.append('non-periodic')
-        descr.append('; ID: {}>'.format(id(self)))
-        return ''.join(descr)
+            descr = ['<{:s}, {:d} atoms, {:d} bonds, '.format(
+                self.name, self.n_leaves, self.n_contained_bonds
+            )]
+            if any(self.periodicity):
+                descr.append('periodicity: {}'.format(self.periodicity))
+            else:
+                descr.append('non-periodic')
+            descr.append('; ID: {}>'.format(id(self)))
+            return ''.join(descr)
 
     def _clone(self, clone_of=None, root_container=None):
         """A faster alternative to deepcopying.
