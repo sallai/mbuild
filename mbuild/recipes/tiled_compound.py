@@ -56,7 +56,7 @@ class TiledCompound(Compound):
         # will contain atoms with ID's from 0-1799. These ID's are used below
         # to fix bonds crossing periodic boundary conditions where a new tile
         # has been placed.
-        for idx, atom in enumerate(tile.yield_atoms()):
+        for idx, atom in enumerate(tile._leaves(include_ports=True)):
             atom.index = idx
 
         # Replicate and place periodic tiles.
@@ -76,19 +76,19 @@ class TiledCompound(Compound):
 
         # Bonds that were periodic in the original tile.
         atom_indices_of_periodic_bonds = set()
-        for bond in tile.yield_bonds():
+        for bond in tile.contained_bonds:
             if bond.length() > bond_dist_thres:
                 atom_indices_of_periodic_bonds.add((bond.atom1.index,
                                                     bond.atom2.index))
 
         # Build a periodic kdtree of all atom positions.
         self.atom_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
-        all_atoms = np.asarray(self.atoms)
+        all_atoms = np.asarray(list(self._leaves(include_ports=False)))
 
         # Store bonds to remove/add since we'll be iterating over all bonds.
         bonds_to_remove = set()
         bonds_to_add = set()
-        for bond in self.yield_bonds():
+        for bond in self.contained_bonds:
             atom_indices = (bond.atom1.index, bond.atom2.index)
             if atom_indices in atom_indices_of_periodic_bonds:
                 if bond.length(self.periodicity) > bond_dist_thres:
@@ -102,7 +102,7 @@ class TiledCompound(Compound):
         self.add(bonds_to_add)
 
         # Clean up temporary data.
-        for atom in self.yield_atoms():
+        for atom in self._leaves(include_ports=True):
             atom.index = None
         del self.atom_kdtree
 
@@ -120,6 +120,7 @@ class TiledCompound(Compound):
     def _find_atom_image(self, query, match, all_atoms):
         """Find atom with the same index as match in a neighboring tile. """
         _, idxs = self.atom_kdtree.query(query.pos, k=10)
+
         neighbors = all_atoms[idxs]
 
         for atom in neighbors:

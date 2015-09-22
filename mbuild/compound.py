@@ -136,13 +136,29 @@ class Compound(Part):
     @property
     def leaves(self):
         """ """
-        for part in self._yield_parts(Compound):
-            if not part.parts:
-                yield part
+        return self._leaves(include_ports=False)
+        # include_ports = False
+        # for part in self._yield_parts(Compound):
+        #     if not part.parts:
+        #         if include_ports or part.name != 'G':
+        #             yield part
+
+
     @property
     def n_leaves(self):
+        return self._n_leaves(include_ports=False)
+
+    def _n_leaves(self, include_ports=False):
         """Return the number of Atoms in the Compound. """
-        return len(list(self.leaves))
+        # import pdb; pdb.set_trace()
+        return sum(1 for x in self._leaves(include_ports))
+
+    def _leaves(self, include_ports=False):
+        """Return all leaf nodes of the Compound. """
+        for part in self._yield_parts(Compound):
+            if not part.parts:
+                if include_ports or part.name != 'G':
+                    yield part
 
     @property
     def contained_bonds(self):
@@ -186,7 +202,7 @@ class Compound(Part):
     def xyz_with_ports(self):
         """Return all atom coordinates in this compound including ports. """
         arr = np.fromiter(itertools.chain.from_iterable(
-            atom.pos for atom in self.leaves), dtype=float)
+            atom.pos for atom in self._leaves(include_ports=True)), dtype=float)
         return arr.reshape((-1, 3))
 
     @property
@@ -307,6 +323,10 @@ class Compound(Part):
 
     def remove(self, objs_to_remove):
         """Remove parts (Atom, Bond or Compound) from the Compound. """
+
+        if not self.parts:
+            return
+
         if not isinstance(objs_to_remove, (list, tuple, set)):
             objs_to_remove = [objs_to_remove]
         objs_to_remove = set(objs_to_remove)
@@ -520,12 +540,11 @@ class Compound(Part):
 
     def _to_json(self, show_ports=False):
         atoms = list()
-        for idx, leaf in enumerate(self.leaves):
-            if not show_ports and leaf.name == 'G':
-                continue
+
+        for idx, leaf in enumerate(self._leaves(include_ports=show_ports)):
             leaf.index = idx
             atoms.append({'element': leaf.name,
-                          'location': list(leaf.pos * 10)})
+                          'location': list(np.asarray(leaf.pos, dtype=float) * 10)})
 
         bonds = [{'atoms': [bond.atom1.index, bond.atom2.index],
                   'order': 1}
@@ -559,7 +578,7 @@ class Compound(Part):
         if coords_only:
             if traj.n_atoms != self.n_leaves:
                 raise ValueError('Number of atoms in {traj} does not match {self}'.format(**locals()))
-            for mdtraj_atom, leaf in zip(traj.topology.atoms, self.leaves):
+            for mdtraj_atom, leaf in zip(traj.topology.atoms, self._leaves(include_ports=False)):
                 leaf.pos = traj.xyz[frame, mdtraj_atom.index]
             return
 
@@ -836,6 +855,9 @@ class Compound(Part):
         newone.periodicity = deepcopy(self.periodicity)
         newone.pos = self.pos
         newone.charge = self.charge
+
+        if hasattr(self,'index'):
+            newone.index = self.index
 
         # Create empty containers if necessary
         if self.parts:

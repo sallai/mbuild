@@ -72,7 +72,7 @@ class Bond(Part):
 
     def length(self, periodicity=None):
         """Calculate the bond length considering minimum image. """
-        dist = np.abs(self.atom1 - self.atom2)
+        dist = np.abs(self.atom1.pos - self.atom2.pos)
         if periodicity is None:
             return np.sqrt((dist ** 2).sum(axis=-1))
         else:
