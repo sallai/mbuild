@@ -7,17 +7,17 @@ import os
 import sys
 
 import imolecule
+from networkx.exception import NetworkXError
 import numpy as np
 import mdtraj as md
+import networkx as nx
 from mdtraj.core.element import get_by_symbol
 from mdtraj.core.topology import Topology
 from oset import oset as OrderedSet
 
 #from mbuild.atom import Atom
 from mbuild.box import Box
-from mbuild.bond import Bond
 from mbuild.formats.mol2 import write_mol2
-from mbuild.part import Part
 from mbuild.periodic_kdtree import PeriodicCKDTree
 
 
@@ -43,17 +43,23 @@ def load(filename, relative_to_module=None, frame=-1, compound=None,
     return compound
 
 
-def clone(what, clone_of=None, root_container=None):
+def clone(existing_compound, clone_of=None, root_container=None):
     """A faster alternative to deepcopying.
 
     Does not resolve circular dependencies. This should be safe provided
     you never try to add the top of a Compound hierarchy to a
     sub-Compound.
     """
-    return what._clone(clone_of=clone_of, root_container=root_container)
+    if clone_of is None:
+        clone_of = dict()
+
+    newone = existing_compound._clone(clone_of=clone_of, root_container=root_container)
+    existing_compound._clone_bonds(clone_of=clone_of, root_container=root_container)
+
+    return newone
 
 
-class Compound(Part):
+class Compound(object):
     """A building block in the mBuild hierarchy.
 
     Compound is the superclass of all composite building blocks in the mBuild
@@ -128,10 +134,16 @@ class Compound(Part):
 
         self.parts = None
         self.labels = None
+        self.graph = None
+        self.parent = None
+
+        # The set of other compounds that reference this compound with labels.
+        self.referrers = set()
 
         # self.add() must be called after labels and parts are initialized.
         if subcompounds:
             self.add(subcompounds)
+
 
     @property
     def leaves(self):
@@ -163,7 +175,7 @@ class Compound(Part):
     @property
     def contained_bonds(self):
         """A list of all Bonds in the Compound and sub-Compounds. """
-        return self._yield_parts(Bond)
+        return self.graph.edges_iter()
 
     @property
     def n_contained_bonds(self):
@@ -234,7 +246,33 @@ class Compound(Part):
             leaf_array = np.fromiter(self.leaves)
         return leaf_array[idxs]
 
-    def add_bonds(self, name_a, name_b, dmin, dmax, kind=None):
+    def ancestors(self):
+        """Generate all ancestors of the Compound recursively. """
+        yield self.parent
+        if self.parent is not None:
+            for ancestor in self.parent.ancestors():
+                yield ancestor
+
+    def add_bond(self, atom_pair):
+
+        # Create parts and labels and graph on the first add operation
+        if self.parts is None:
+            self.parts = OrderedSet()
+        if self.labels is None:
+            self.labels = OrderedDict()
+        if self.graph is None:
+            self.graph = nx.Graph()
+
+        try:
+            self.graph.add_edge(atom_pair[0], atom_pair[1])
+            if self.parent:
+                self.parent.add_bond(atom_pair)
+
+        except TypeError:
+            for c1, c2 in atom_pair:
+                self.add_bond((c1, c2))
+
+    def add_bonds(self, name_a, name_b, dmin, dmax):
         """Add Bonds between all pairs of types a/b within [dmin, dmax]. """
         leaf_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
         leaf_array = np.array(self.atoms)
@@ -248,7 +286,7 @@ class Compound(Part):
                 if bond_tuple in added_bonds:
                     continue
                 if (a2.name == name_b) and (dmin <= self.min_periodic_distance(a2.pos, a1.pos) <= dmax):
-                    self.add(Bond(a1, a2, kind=kind))
+                    self.add_bond(a1, a2)
                     added_bonds.append(bond_tuple)
 
     def add(self, new_part, label=None, containment=True, replace=False,
@@ -273,19 +311,21 @@ class Compound(Part):
 
         """
         # Support batch add via lists, tuples and sets.
-        if isinstance(new_part, (list, tuple, set)):
+        if hasattr(new_part, '__iter__'):
             for part in new_part:
                 self.add(part)
             return
 
-        # Create parts and labels on the first add operation
+        # Create parts and labels and graph on the first add operation
         if self.parts is None:
             self.parts = OrderedSet()
         if self.labels is None:
             self.labels = OrderedDict()
+        if self.graph is None:
+            self.graph = nx.Graph()
 
-        if not isinstance(new_part, Part):
-            raise ValueError('Only objects that inherit from mbuild.Part '
+        if not isinstance(new_part, Compound):
+            raise ValueError('Only objects that inherit from mbuild.Compound '
                              'can be added to Compounds. You tried to add '
                              '{}'.format(new_part))
 
@@ -295,6 +335,10 @@ class Compound(Part):
                     new_part, new_part.parent))
             self.parts.add(new_part)
             new_part.parent = self
+
+            if new_part.graph:
+                self.graph = nx.compose(self.graph, new_part.graph)
+
 
         # Add new_part to labels. Does not currently support batch add.
         if label is None:
@@ -327,7 +371,7 @@ class Compound(Part):
         if not self.parts:
             return
 
-        if not isinstance(objs_to_remove, (list, tuple, set)):
+        if not hasattr(objs_to_remove, '__iter__'):
             objs_to_remove = [objs_to_remove]
         objs_to_remove = set(objs_to_remove)
 
@@ -347,6 +391,17 @@ class Compound(Part):
             for part in self.parts:
                 if isinstance(part, Compound) and len(objs_to_remove) > 0:
                     part.remove(objs_to_remove)
+
+    def remove_bond(self, atom_pair):
+        if self.graph is None:
+            return
+
+        try:
+            self.graph.remove_edge(atom_pair[0], atom_pair[1])
+        except (TypeError, NetworkXError):
+            for c1, c2 in atom_pair:
+                self.remove_bond((c1, c2))
+
 
     @staticmethod
     def _remove_bonds(removed_part):
@@ -546,9 +601,9 @@ class Compound(Part):
             atoms.append({'element': leaf.name,
                           'location': list(np.asarray(leaf.pos, dtype=float) * 10)})
 
-        bonds = [{'atoms': [bond.atom1.index, bond.atom2.index],
+        bonds = [{'atoms': [atom1.index, atom2.index],
                   'order': 1}
-                 for bond in self.contained_bonds]
+                 for atom1, atom2 in self.contained_bonds]
         output = {'name': self.name, 'atoms': atoms, 'bonds': bonds}
 
         # remove the index member variable
@@ -598,7 +653,7 @@ class Compound(Part):
         for mdtraj_atom1, mdtraj_atom2 in traj.topology.bonds:
             atom1 = atom_mapping[mdtraj_atom1]
             atom2 = atom_mapping[mdtraj_atom2]
-            self.add(Bond(atom1, atom2))
+            self.add_bond((atom1, atom2))
 
         if np.any(traj.unitcell_lengths) and np.any(traj.unitcell_lengths[0]):
             self.periodicity = traj.unitcell_lengths[0]
@@ -813,8 +868,8 @@ class Compound(Part):
         if attr in self.labels:
             return self.labels[attr]
         else:
-            raise AttributeError("'{}' object has no attribute '{}'".format(
-                self, attr))
+            raise AttributeError("'{}' object has no attribute '{}'".format(type(
+                self), attr))
 
     def __repr__(self):
         if self.parts is None:
@@ -858,6 +913,7 @@ class Compound(Part):
         newone.periodicity = deepcopy(self.periodicity)
         newone.pos = self.pos
         newone.charge = self.charge
+        newone.graph = None
 
         if hasattr(self,'index'):
             newone.index = self.index
@@ -886,31 +942,38 @@ class Compound(Part):
         # Add parts to clone.
         if self.parts:
             for part in self.parts:
-                if isinstance(part, Bond) and part.has_atoms_outside_of(root_container):
-                    # Ignore bonds with atoms outside the hierarchy.
-                    continue
-                else:
-                    newpart = clone(part, clone_of, root_container)
-                    newone.parts.add(newpart)
-                    newpart.parent = newone
+                newpart = clone(part, clone_of, root_container)
+                newone.parts.add(newpart)
+                newpart.parent = newone
 
         # Copy labels, except bonds with atoms outside the hierarchy.
         if self.labels:
             for label, part in self.labels.items():
-                if isinstance(part, Bond) and part.has_atoms_outside_of(root_container):
-                    # Ignore bonds with atoms outside the hierarchy.
-                    continue
+                if not isinstance(part, list):
+                    newone.labels[label] = clone(part, clone_of, root_container)
+                    part.referrers.add(clone_of[part])
                 else:
-                    if not isinstance(part, list):
-                        newone.labels[label] = clone(part, clone_of, root_container)
-                        part.referrers.add(clone_of[part])
-                    else:
-                        # Part is a list of parts, so we create an empty list, and
-                        # add the clones of the original list elements.
-                        newone.labels[label] = []
-                        for subpart in part:
-                            newone.labels[label].append(clone(subpart, clone_of, root_container))
-                            # Referrers must have been handled already, or the will be handled
+                    # Part is a list of parts, so we create an empty list, and
+                    # add the clones of the original list elements.
+                    newone.labels[label] = []
+                    for subpart in part:
+                        newone.labels[label].append(clone(subpart, clone_of, root_container))
+                        # Referrers must have been handled already, or the will be handled
+
         return newone
+
+    def _clone_bonds(self, clone_of=None, root_container=None):
+        newone = clone_of[self]
+
+        # clone graphs of parts recursively
+        if self.parts:
+            for part in self.parts:
+                part._clone_bonds(clone_of, root_container)
+
+        # clone graph
+        if self.graph:
+            for c1, c2 in self.graph.edges_iter():
+                newone.add_bond((clone_of[c1], clone_of[c2]))
+
 
 Atom = Compound

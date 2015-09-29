@@ -19,4 +19,8 @@ def main():
 
 if __name__ == "__main__":
     ethane = main()
+    atoms = list(ethane.leaves)
+    print(ethane)
+    for a in ethane.leaves:
+        print(a)
     ethane.visualize(show_ports=True)

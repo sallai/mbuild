@@ -2,7 +2,6 @@ import itertools as it
 
 import numpy as np
 
-from mbuild.bond import Bond
 from mbuild.compound import Compound
 from mbuild.port import Port
 from mbuild.coordinate_transform import translate
@@ -76,10 +75,10 @@ class TiledCompound(Compound):
 
         # Bonds that were periodic in the original tile.
         atom_indices_of_periodic_bonds = set()
-        for bond in tile.contained_bonds:
-            if bond.length() > bond_dist_thres:
-                atom_indices_of_periodic_bonds.add((bond.atom1.index,
-                                                    bond.atom2.index))
+        for atom1, atom2 in tile.contained_bonds:
+            if np.linalg.norm(atom1.pos-atom2.pos) > bond_dist_thres:
+                atom_indices_of_periodic_bonds.add((atom1.index,
+                                                    atom2.index))
 
         # Build a periodic kdtree of all atom positions.
         self.atom_kdtree = PeriodicCKDTree(data=self.xyz, bounds=self.periodicity)
@@ -88,18 +87,18 @@ class TiledCompound(Compound):
         # Store bonds to remove/add since we'll be iterating over all bonds.
         bonds_to_remove = set()
         bonds_to_add = set()
-        for bond in self.contained_bonds:
-            atom_indices = (bond.atom1.index, bond.atom2.index)
+        for atom1, atom2 in self.contained_bonds:
+            atom_indices = (atom1.index, atom2.index)
             if atom_indices in atom_indices_of_periodic_bonds:
-                if bond.length(self.periodicity) > bond_dist_thres:
-                    bonds_to_remove.add(bond)
+                if self.min_periodic_distance(atom1.pos, atom2.pos) > bond_dist_thres:
 
-                    atom2_image = self._find_atom_image(bond.atom1, bond.atom2, all_atoms)
-                    new_bond = Bond(bond.atom1, atom2_image)
-                    bonds_to_add.add(new_bond)
+                    bonds_to_remove.add((atom1, atom2))
 
-        self.remove(bonds_to_remove)
-        self.add(bonds_to_add)
+                    atom2_image = self._find_atom_image(atom1, atom2, all_atoms)
+                    bonds_to_add.add((atom1, atom2_image))
+
+        self.remove_bond(bonds_to_remove)
+        self.add_bond(bonds_to_add)
 
         # Clean up temporary data.
         for atom in self._leaves(include_ports=True):

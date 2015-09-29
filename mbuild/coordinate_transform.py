@@ -295,7 +295,6 @@ def equivalence_transform(compound, from_positions, to_positions, add_bond=True)
 
     """
     from mbuild.port import Port
-    from mbuild.bond import Bond
     T = None
     if isinstance(from_positions, (list, tuple)) and isinstance(to_positions, (list, tuple)):
         equivalence_pairs = zip(from_positions, to_positions)
@@ -312,7 +311,10 @@ def equivalence_transform(compound, from_positions, to_positions, add_bond=True)
 
     if add_bond:
         if isinstance(from_positions, Port) and isinstance(to_positions, Port):
-            compound.add(Bond(from_positions, to_positions))
+            if not from_positions.anchor or not to_positions.anchor:
+                warnings.warn("Attempting to form bond from port that has no anchor")
+            else:
+                compound.add_bond((from_positions.anchor, to_positions.anchor))
 
 
 def _choose_correct_port(from_port, to_port):

@@ -1,5 +1,4 @@
 from mbuild.atom import Atom
-from mbuild.bond import Bond
 from mbuild.box import Box
 from mbuild.coordinate_transform import *
 from mbuild.compound import *
