@@ -167,14 +167,23 @@ class Compound(object):
 
     def _leaves(self, include_ports=False):
         """Return all leaf nodes of the Compound. """
-        for part in self._yield_parts(Compound):
-            if not part.parts:
-                if include_ports or part.name != 'G':
-                    yield part
+
+        if not hasattr(self, 'parts') or not self.parts:
+            yield self
+        else:
+            for part in self._yield_parts(Compound):
+                if not part.parts:
+                    if include_ports or part.name != 'G':
+                        yield part
 
     @property
     def contained_bonds(self):
         """A list of all Bonds in the Compound and sub-Compounds. """
+        if self.graph is None:
+            def empty_generator():
+                return
+                yield
+            return empty_generator()
         return self.graph.edges_iter()
 
     @property
@@ -255,11 +264,6 @@ class Compound(object):
 
     def add_bond(self, atom_pair):
 
-        # Create parts and labels and graph on the first add operation
-        if self.parts is None:
-            self.parts = OrderedSet()
-        if self.labels is None:
-            self.labels = OrderedDict()
         if self.graph is None:
             self.graph = nx.Graph()
 
@@ -872,18 +876,28 @@ class Compound(object):
                 self), attr))
 
     def __repr__(self):
-        if self.parts is None:
-            return "<{:s}, pos=({: .4f},{: .4f},{: .4f}; ID: {})>".format(self.name, self.pos[0], self.pos[1], self.pos[2], id(self))
+        from mbuild.proxy import Proxy
+        descr = list('<')
+        descr.append(self.name)
+        if isinstance(self, Proxy):
+            descr.append('(proxy) ')
         else:
-            descr = ['<{:s}, {:d} atoms, {:d} bonds, '.format(
-                self.name, self.n_leaves, self.n_contained_bonds
-            )]
+            descr.append(' ')
+
+        if self.parts:
+            descr.append('{:d} leaves, '.format(self.n_leaves))
             if any(self.periodicity):
-                descr.append('periodicity: {}'.format(self.periodicity))
+                descr.append('periodicity: {}, '.format(self.periodicity))
             else:
-                descr.append('non-periodic')
-            descr.append('; ID: {}>'.format(id(self)))
-            return ''.join(descr)
+                descr.append('non-periodic, ')
+        else:
+            descr.append('pos=({: .4f},{: .4f},{: .4f}), '.format(self.pos[0], self.pos[1], self.pos[2]))
+
+        if self.graph:
+            descr.append('{:d} contained bonds, '.format(self.n_contained_bonds))
+
+        descr.append('id: {}>'.format(id(self)))
+        return ''.join(descr)
 
     def _clone(self, clone_of=None, root_container=None):
         """A faster alternative to deepcopying.
