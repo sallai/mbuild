@@ -117,13 +117,6 @@ class Compound(object):
         else:
             self.name = self.__class__.__name__
 
-        # Position
-        if pos is not None:
-            self.pos = np.asarray(pos, dtype=float)
-        else:
-            self.pos = np.zeros(3)
-
-        self.charge = charge
 
         self.attached_bonds = None
 
@@ -137,6 +130,15 @@ class Compound(object):
         self.graph = None
         self.parent = None
 
+        # Position
+        if pos is not None:
+            self._pos = np.asarray(pos, dtype=float)
+        else:
+            self._pos = np.zeros(3)
+
+        self.charge = charge
+
+
         # The set of other compounds that reference this compound with labels.
         self.referrers = set()
 
@@ -144,6 +146,19 @@ class Compound(object):
         if subcompounds:
             self.add(subcompounds)
 
+    @property
+    def pos(self):
+        if self.parts is None or not self.parts:
+            return self._pos
+        else:
+            return self.center
+
+    @pos.setter
+    def pos(self, value):
+        if self.parts is None or not self.parts:
+            self._pos = value
+        else:
+            raise Exception("cannot set position on a Compound that has parts")
 
     @property
     def leaves(self):
@@ -615,7 +630,6 @@ class Compound(object):
             if not show_ports and leaf.name == 'G':
                 continue
             del leaf.index
-
         return imolecule.json_formatter.compress(output)
 
     # Interface to Trajectory for reading/writing .pdb and .mol2 files.
@@ -925,7 +939,7 @@ class Compound(object):
 
         newone.name = self.name
         newone.periodicity = deepcopy(self.periodicity)
-        newone.pos = self.pos
+        newone._pos = self._pos
         newone.charge = self.charge
         newone.graph = None
 

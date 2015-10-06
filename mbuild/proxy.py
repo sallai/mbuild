@@ -4,10 +4,9 @@ from lib.moieties.ch3 import CH3
 __author__ = 'sallai'
 
 from mbuild.compound import Compound
-from mbuild.atom import Atom
-from mbuild.bond import Bond
 from collections import OrderedDict
 from oset import oset as OrderedSet
+import networkx as nx
 
 class Proxy(Compound):
 
@@ -17,12 +16,13 @@ class Proxy(Compound):
     def __init__(self, compound):
         assert(isinstance(compound, Compound))
         self.wrapped = compound
-        self.parts = OrderedSet()
-        self.labels = OrderedDict()
+        self.parts = None
+        self.labels = None
         self.parent = None
         self.referrers = set()
         self.index = None
         self.attached_bonds = set()
+        self.graph = None
 
     def proxy_for(self):
         if hasattr(self.wrapped,'wrapped'):
@@ -30,66 +30,70 @@ class Proxy(Compound):
         else:
             return self.wrapped.__class__
 
+    @property
+    def pos(self):
+        return self.wrapped.pos
 
-    def __repr__(self):
-        return "Proxy<{0}>".format(self.wrapped.__repr__())
+    @pos.setter
+    def pos(self, value):
+        self.wrapped.pos = value
 
-def is_compound(what):
-    return hasattr(what,'parts')
+
 
 def is_leaf(what):
     return hasattr(what,'parts') and not what.parts
-
-def is_bond(what):
-    return hasattr(what,'atom1') and hasattr(what, 'atom2')
 
 def create_proxy(real_thing, memo=None, leaf_classes=None):
     if memo is None:
         memo = OrderedDict()
 
     if leaf_classes is None:
-        leaf_classes = ()
+        leaf_classes = []
 
-    proxy = _create_proxy_atoms_and_compounds(real_thing, memo, leaf_classes)
-    _create_proxy_bonds(real_thing, memo)
+    proxy = _create_proxy_compounds(real_thing, memo, leaf_classes)
+    _create_proxy_bonds(real_thing, memo, leaf_classes)
     _create_proxy_labels(real_thing, memo)
 
     return proxy
 
-def _create_proxy_atoms_and_compounds(real_thing, memo, leaf_classes):
-    assert is_compound(real_thing), 'real_thing has to be a compound'
-
+def _create_proxy_compounds(real_thing, memo, leaf_classes):
     proxy = Proxy(real_thing)
     memo[real_thing] = proxy
 
-    if not is_leaf(real_thing):
-        # recursively create proxies for parts
-        # let's do Atoms and Compounds in this recursion (we'll do bonds and labels later)
-        for part in real_thing.parts:
-            if is_bond(part):
-                # it is done later
-                continue
-            if is_compound(part):
-                # recurse
-                part_proxy = _create_proxy_atoms_and_compounds(part, memo, leaf_classes)
+    if not type(real_thing) in leaf_classes:
+         if not is_leaf(real_thing): # recurse only if it has parts
+            # recursively create proxies for parts (we'll do labels later)
+            for part in real_thing.parts:
+                part_proxy = _create_proxy_compounds(part, memo, leaf_classes)
                 proxy.add(part_proxy)
 
     return proxy
 
 
-def _create_proxy_bonds(real_thing, memo):
-    if is_compound(real_thing):
+def _proxy_of(real_thing, memo):
+    if real_thing in memo:
+        return memo[real_thing]
+    else:
+        return _proxy_of(real_thing.parent, memo)
 
-        # create proxies for Bonds
+def _create_proxy_bonds(real_thing, memo, leaf_classes):
+    proxy = memo[real_thing]
+
+    if type(real_thing) in leaf_classes or is_leaf(real_thing):
+        # it is a leaf of the proxy, so we don't recurse
+        pass
+    else:
+        # recurse
         for part in real_thing.parts:
-            if is_bond(part):
-                if part.atom1 in memo and part.atom2 in memo:
-                    new_bond = Bond(memo[part.atom1], memo[part.atom2], part.kind)
-                    memo[part] = new_bond
-                    memo[real_thing].add(new_bond)
-            elif not is_leaf(part):
-                # recurse, even if we're in a leaf node, because there might be bonds in there that point out of the compound
-                _create_proxy_bonds(part, memo)
+            _create_proxy_bonds(part, memo, leaf_classes)
+
+    # check if there's a contained bond that needs to be added to the proxy
+    if hasattr(real_thing, 'contained_bonds'):
+        for a1, a2 in real_thing.contained_bonds:
+            pa1 = _proxy_of(a1, memo)
+            pa2 = _proxy_of(a2, memo)
+            if pa1 != pa2: # do not add internal bonds
+                proxy.add_bond((pa1, pa2))
 
 def _create_proxy_labels(real_thing, memo):
     if not is_leaf(real_thing):
@@ -99,13 +103,12 @@ def _create_proxy_labels(real_thing, memo):
             if isinstance(part, list):
                 # TODO support lists with labels
                 continue
-            if (is_compound(part) or is_bond(part)) and part in memo:
+            if part in memo:
                 memo[real_thing].labels[label] = memo[part]
 
         # recurse
         for part in real_thing.parts:
-            if is_compound(part):
-                _create_proxy_labels(part, memo)
+            _create_proxy_labels(part, memo)
 
 
 if __name__ == '__main__':
