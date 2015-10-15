@@ -5,8 +5,6 @@ __author__ = 'sallai'
 
 from mbuild.compound import Compound
 from collections import OrderedDict
-from oset import oset as OrderedSet
-import networkx as nx
 
 class Proxy(Compound):
 

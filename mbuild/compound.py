@@ -54,7 +54,12 @@ def clone(existing_compound, clone_of=None, root_container=None):
         clone_of = dict()
 
     newone = existing_compound._clone(clone_of=clone_of, root_container=root_container)
+
+
+    # try:
     existing_compound._clone_bonds(clone_of=clone_of, root_container=root_container)
+    # except:
+        # import pdb; pdb.set_trace()
 
     return newone
 
@@ -802,9 +807,7 @@ class Compound(object):
                 except ValueError:  # Already gone.
                     pass
 
-        for bond in self.contained_bonds:
-            atom1 = bond.atom1
-            atom2 = bond.atom2
+        for atom1, atom2 in self.graph.edges_iter():
             # Ensure that both atoms are part of the compound. This becomes an
             # issue if you try to convert a sub-compound to a topology which is
             # bonded to a different subcompound.
@@ -918,7 +921,7 @@ class Compound(object):
 
         Does not resolve circular dependencies. This should be safe provided
         you never try to add the top of a Compound hierarchy to a
-        sub-Compound.
+        sub-Compound. Clones compound hierarchy only, not the bonds.
         """
         if root_container is None:
             root_container = self
@@ -970,7 +973,7 @@ class Compound(object):
         # Add parts to clone.
         if self.parts:
             for part in self.parts:
-                newpart = clone(part, clone_of, root_container)
+                newpart = part._clone(clone_of, root_container)
                 newone.parts.add(newpart)
                 newpart.parent = newone
 
@@ -978,14 +981,14 @@ class Compound(object):
         if self.labels:
             for label, part in self.labels.items():
                 if not isinstance(part, list):
-                    newone.labels[label] = clone(part, clone_of, root_container)
+                    newone.labels[label] = part._clone(clone_of, root_container)
                     part.referrers.add(clone_of[part])
                 else:
                     # Part is a list of parts, so we create an empty list, and
                     # add the clones of the original list elements.
                     newone.labels[label] = []
                     for subpart in part:
-                        newone.labels[label].append(clone(subpart, clone_of, root_container))
+                        newone.labels[label].append(subpart._clone(clone_of, root_container))
                         # Referrers must have been handled already, or the will be handled
 
         return newone
