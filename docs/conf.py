@@ -21,10 +21,18 @@ pip.main(['install', 'numpydoc'])
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../mbuild'))
+pip.main(['install', 'sphinx_rtd_theme'])
+pip.main(['install', 'mock'])
+import mock
 
+MOCK_MODULES = ['numpy', 'mdtraj', 'nglview', 'oset', 'parmed', 'parmed.periodic_table', 'scipy', 'scipy.spatial', 'numpy.linalg']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
+
+
+sys.path.insert(0, os.path.abspath('..'))
 import mbuild
-
 
 # -- General configuration ------------------------------------------------
 
@@ -69,7 +77,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'mbuild'
-copyright = u'2014-2015, Vanderbilt University'
+copyright = u'2014-2017, Vanderbilt University'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
