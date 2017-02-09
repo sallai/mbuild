@@ -559,6 +559,7 @@ class Compound(object):
         extension = os.path.splitext(filename)[-1]
 
         savers = {'.hoomdxml': self.save_hoomdxml,
+                  '.gsd': self.save_gsd,
                   '.gro': self.save_gromacs,
                   '.top': self.save_gromacs,
                   '.lammps': self.save_lammpsdata,
@@ -592,6 +593,25 @@ class Compound(object):
                     box.mins[dim] -= 0.25
                     box.lengths[dim] += 0.5
         write_hoomdxml(structure, filename, forcefield, box, **kwargs)
+
+    def save_gsd(self, filename, structure, forcefield, box=None, **kwargs):
+        """ """
+        from mbuild.formats.gsdwriter import write_gsd
+        if forcefield:
+            from foyer.forcefield import apply_forcefield
+            structure = apply_forcefield(structure, forcefield=forcefield)
+        if not box:
+            box = self.boundingbox
+            for dim, val in enumerate(self.periodicity):
+                if val:
+                    box.lengths[dim] = val
+                    box.maxs[dim] = val
+                    box.mins[dim] = 0.0
+                if not val:
+                    box.maxs[dim] += 0.25
+                    box.mins[dim] -= 0.25
+                    box.lengths[dim] += 0.5
+        write_gsd(structure, filename, forcefield, box, **kwargs)
 
     def save_gromacs(self, filename, structure, forcefield, force_overwrite=False, **kwargs):
         """ """
@@ -641,7 +661,7 @@ class Compound(object):
             The trajectory to load.
         frame : int
             The frame to take coordinates from.
-;
+
         """
         if coords_only:
             if traj.n_atoms != self.n_particles:
@@ -869,13 +889,16 @@ class Compound(object):
         structure = pmd.Structure()
         structure.title = title if title else self.name
         atom_mapping = {}  # For creating bonds below
+        guessed_elements = set()
         for atom in self.particles():
             atomic_number = None
             try:
                 atomic_number = AtomicNum[atom.name]
             except KeyError:
                 element = element_by_name(atom.name)
-                warn('Guessing that {} is element: {}'.format(atom, element))
+                if atom.name not in guessed_elements:
+                    warn('Guessing that "{}" is element: "{}"'.format(atom, element))
+                    guessed_elements.add(atom.name)
             else:
                 element = atom.name
 

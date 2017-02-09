@@ -16,17 +16,17 @@ class Polymer(Compound):
     ----------
     monomers : mb.Compound or list of mb.Compound
         The compound(s) to replicate.
+    n : int
+        The number of times to replicate the sequence.
     sequence : str, optional, default='A'
         A string of characters where each unique character represents one
         repetition of a monomer. Characters in `sequence` are assigned to
-        monomers in alphabetic order.
-    n : int, optional, default=2
-        The number of times to replicate the sequence.
+        monomers in the order assigned by the built-in `sorted()`.
     port_labels : 2-tuple of strs, optional, default=('up', 'down')
         The names of the two ports to use to connect copies of proto.
 
     """
-    def __init__(self, monomers, sequence='A', n=2, port_labels=('up', 'down')):
+    def __init__(self, monomers, n, sequence='A', port_labels=('up', 'down')):
         if n < 1:
             raise ValueError('n must be 1 or more')
         super(Polymer, self).__init__()
