@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Methane: Atoms, Bonds and Compounds &mdash; mbuild 0.6.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mbuild 0.6.0.dev0 documentation" href="../index.html"/>
+        <link rel="up" title="Tutorials" href="tutorials.html"/>
+        <link rel="next" title="Ethane: Reading from files, Ports and coordinate transforms" href="tutorial_ethane.html"/>
+        <link rel="prev" title="Tutorials" href="tutorials.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mbuild
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Methane: Atoms, Bonds and Compounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_ethane.html">Ethane: Reading from files, Ports and coordinate transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_monolayer.html">Monolayer: Complex hierarchies, patterns, tiling and writing to files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_LJ.html">Point Particles: Basic system initialization</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data_structures.html">Data Structure</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coordinate_transforms.html">Coordinate transformations</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../recipes.html">Recipes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">mbuild</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+      
+    <li>Methane: Atoms, Bonds and Compounds</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorials/tutorial_methane.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="methane-atoms-bonds-and-compounds">
+<h1>Methane: Atoms, Bonds and Compounds<a class="headerlink" href="#methane-atoms-bonds-and-compounds" title="Permalink to this headline">¶</a></h1>
+<p>Run this interactively by downloading the IPython Notebook file <a class="reference download internal" href="../_downloads/tutorial_methane.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial_methane.ipynb</span></code></a>.</p>
+
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<h2 id="Methane:-Compounds-and-bonds">Methane: Compounds and bonds<a class="anchor-link" href="#Methane:-Compounds-and-bonds">&#182;</a></h2><p><strong>Note</strong>: mBuild expects all distance units to be in nanometers.</p>
+<p>The primary building block in mBuild is a <code>Compound</code>. Anything you construct will inherit from this class. Let's start with some basic imports and initialization:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[12]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">Methane</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Methane</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Any <code>Compound</code> can contain other <code>Compounds</code> which can be added using its <code>add()</code> method. <code>Compounds</code> at the bottom of such a hierarchy are referred to as <code>Particles</code>. Note however, that this is purely semantic in mBuild to help clearly designate the bottom of a hierarchy.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[13]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">Methane</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Methane</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">carbon</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">carbon</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;C[$]&#39;</span><span class="p">)</span>
+
+        <span class="n">hydrogen</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">0.11</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hydrogen</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;HC[$]&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>By default a created <code>Compound/Particle</code> will be placed at <code>0, 0, 0</code> as indicated by its <code>pos</code> attribute.  The <code>Particle</code> objects contained in a <code>Compound</code>, the bottoms of the hierarchy, can be referenced via the <code>particles</code> method which returns a generator of all <code>Particle</code> objects contained below the <code>Compound</code> in the hierarchy.</p>
+<p><strong>Note:</strong> All positions in mBuild are stored in nanometers.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Any part added to a <code>Compound</code> can be given an optional, descriptive string label. If the label ends with the characters <code>[$]</code>, a list will be created in the labels. Any subsequent parts added to the <code>Compound</code> with the same label prefix will be appended to the list. In the example above, we've labeled the hydrogen as <code>HC[$]</code>. So this first part, with the label prefix <code>HC</code>, is
+now referenceable via <code>self['HC'][0]</code>. The next part added with the label <code>HC[$]</code> will be referenceable via <code>self['HC'][1]</code>.</p>
+<p>Now let's use these styles of referencing to connect the carbon to the hydrogen. Note that for typical use cases, you will almost never have to explicitly define a bond when using mBuild - this is just to show you what's going on
+under the hood:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[14]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">Methane</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Methane</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">carbon</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">carbon</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;C[$]&#39;</span><span class="p">)</span>
+
+        <span class="n">hydrogen</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">0.11</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hydrogen</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;HC[$]&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;HC&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>As you can see, the carbon is placed in the zero index of <code>self</code>. The hydrogen could be referenced via <code>self[1]</code> but since we gave it a fancy label, it's also referenceable via <code>self['HC'][0]</code>.</p>
+<p>Alright now that we've got the basics, let's finish building our <code>Methane</code> and take a look at it:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[15]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">Methane</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Methane</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">carbon</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">carbon</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;C[$]&#39;</span><span class="p">)</span>
+
+        <span class="n">hydrogen</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.07</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hydrogen</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;HC[$]&#39;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;HC&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.07</span><span class="p">]),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;HC[$]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.07</span><span class="p">]),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;HC[$]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.07</span><span class="p">]),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;HC[$]&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;HC&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;HC&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;HC&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">]))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[16]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">methane</span> <span class="o">=</span> <span class="n">Methane</span><span class="p">()</span>
+<span class="n">methane</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[17]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Save to .mol2</span>
+<span class="n">methane</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;methane.mol2&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div><p>(<a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_methane/tutorial_methane.ipynb">tutorial_methane.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_methane/tutorial_methane_eval.ipynb">tutorial_methane_eval.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_methane/tutorial_methane.py">tutorial_methane.py</a>)</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial_ethane.html" class="btn btn-neutral float-right" title="Ethane: Reading from files, Ports and coordinate transforms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorials.html" class="btn btn-neutral" title="Tutorials" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2017, Vanderbilt University.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.6.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

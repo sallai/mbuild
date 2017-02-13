@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Ethane: Reading from files, Ports and coordinate transforms &mdash; mbuild 0.6.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mbuild 0.6.0.dev0 documentation" href="../index.html"/>
+        <link rel="up" title="Tutorials" href="tutorials.html"/>
+        <link rel="next" title="Monolayer: Complex hierarchies, patterns, tiling and writing to files" href="tutorial_monolayer.html"/>
+        <link rel="prev" title="Methane: Atoms, Bonds and Compounds" href="tutorial_methane.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mbuild
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tutorial_methane.html">Methane: Atoms, Bonds and Compounds</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Ethane: Reading from files, Ports and coordinate transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_monolayer.html">Monolayer: Complex hierarchies, patterns, tiling and writing to files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_LJ.html">Point Particles: Basic system initialization</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data_structures.html">Data Structure</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coordinate_transforms.html">Coordinate transformations</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../recipes.html">Recipes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">mbuild</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+      
+    <li>Ethane: Reading from files, Ports and coordinate transforms</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorials/tutorial_ethane.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ethane-reading-from-files-ports-and-coordinate-transforms">
+<h1>Ethane: Reading from files, Ports and coordinate transforms<a class="headerlink" href="#ethane-reading-from-files-ports-and-coordinate-transforms" title="Permalink to this headline">¶</a></h1>
+<p>Run this interactively by downloading the IPython Notebook file <a class="reference download internal" href="../_downloads/tutorial_ethane.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial_ethane.ipynb</span></code></a> and <a class="reference download internal" href="../_downloads/ch3.pdb" download=""><code class="xref download docutils literal"><span class="pre">ch3.pdb</span></code></a>.</p>
+
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<h2 id="Ethane:-Reading-from-files,-Ports-and-coordinate-transforms">Ethane: Reading from files, Ports and coordinate transforms<a class="anchor-link" href="#Ethane:-Reading-from-files,-Ports-and-coordinate-transforms">&#182;</a></h2><p><strong>Note</strong>: mBuild expects all distance units to be in nanometers.</p>
+<p>In this example, we'll cover reading molecular components from files, introduce the concept of <code>Ports</code> and start using some coordinate transforms.</p>
+<p>As you probably noticed while creating your methane mocule in the last tutorial, manually adding <code>Particles</code> and <code>Bonds</code> to a <code>Compound</code> is a bit cumbersome. The easiest way to create small, reusable components, such as methyls, amines or monomers, is to hand draw them using software like <a href="http://avogadro.cc/wiki/Main_Page">Avogadro</a> and export them as either a .pdb or .mol2 file (the file should contain connectivity information).</p>
+<p>Let's start by reading a methyl group from a <code>.pdb</code> file:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[1]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">CH3</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CH3</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">mb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;ch3.pdb&#39;</span><span class="p">,</span> <span class="n">compound</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Now let's use our first coordinate transform to center the methyl at its carbon atom:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[2]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">CH3</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CH3</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">mb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;ch3.pdb&#39;</span><span class="p">,</span> <span class="n">compound</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>  <span class="c1"># Move carbon to origin.</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Now we have a methyl group loaded up and centered. In order to connect <code>Compounds</code> in mBuild, we make use of a special type of <code>Compound</code>: the <code>Port</code>. A <code>Port</code> is a <code>Compound</code> with two sets of four "ghost" <code>Particles</code>. In addition <code>Ports</code> have an <code>anchor</code> attribute which typically points to a <code>Compound</code> that the <code>Port</code> should be associated with. In our methyl group, the <code>Port</code> should be anchored to the carbon atom so that we
+can now form bonds to this carbon:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[3]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">CH3</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CH3</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">mb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;ch3.pdb&#39;</span><span class="p">,</span> <span class="n">compound</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>  <span class="c1"># Move carbon to origin.</span>
+
+        <span class="n">port</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Port</span><span class="p">(</span><span class="n">anchor</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;up&#39;</span><span class="p">)</span>
+        <span class="c1"># Place the port at approximately have a C-C bond length.</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.07</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>By default, <code>Ports</code> are never output from the mBuild structure. However, it can be useful to look at a molecule with the <code>Ports</code> to check your work as you go:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[4]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">CH3</span><span class="p">()</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="n">show_ports</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>When two <code>Ports</code> are connected, they are forced to overlap in space and their parent <code>Compounds</code> are rotated and translated by the same amount.</p>
+<p><strong>Note:</strong> If we tried to connect two of our methyls right now using only one set of four ghost particles, not only would the <code>Ports</code> overlap perfectly, but the carbons and hydrogens would also perfectly overlap - the 4 ghost atoms in the both <code>Port</code> are arranged identically with respect to the other atoms.</p>
+<p>Forcing the port in &lt;-CH3 to overlap with &lt;-CH3 would just look like &lt;-CH3</p>
+<p>To solve this problem, every port contains a second set of 4 ghost atoms pointing in the opposite direction. When two <code>Compounds</code> are connected, the port that places the anchor atoms the farthest away from each other is chosen automatically to prevent this overlap scenario.</p>
+<p>When &lt;-&gt;CH3 and &lt;-&gt;CH3 are forced to overlap, the CH3&lt;-&gt;CH3 is automatically chosen.</p>
+<p>Now the fun part: stick 'em together to create an ethane:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[5]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">Ethane</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Ethane</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">CH3</span><span class="p">(),</span> <span class="s2">&quot;methyl1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">CH3</span><span class="p">(),</span> <span class="s2">&quot;methyl2&quot;</span><span class="p">)</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">equivalence_transform</span><span class="p">(</span><span class="n">compound</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;methyl1&#39;</span><span class="p">],</span> 
+                                 <span class="n">from_positions</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;methyl1&#39;</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">],</span> 
+                                 <span class="n">to_positions</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;methyl2&#39;</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[6]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ethane</span> <span class="o">=</span> <span class="n">Ethane</span><span class="p">()</span>
+<span class="n">ethane</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[7]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ethane</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="n">show_ports</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Above, the <code>equivalence_transform()</code> function takes a <code>Compound</code> and then rotates and translates it such that two other <code>Compounds</code> overlap. Typically, as in
+this case, those two other <code>Compounds</code> are <code>Ports</code> - in our case, <code>methyl1['up']</code> and <code>methyl2['up']</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[8]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Save to .mol2</span>
+<span class="n">ethane</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;ethane.mol2&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div><p>(<a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_ethane/tutorial_ethane.ipynb">tutorial_ethane.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_ethane/tutorial_ethane_eval.ipynb">tutorial_ethane_eval.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_ethane/tutorial_ethane.py">tutorial_ethane.py</a>)</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial_monolayer.html" class="btn btn-neutral float-right" title="Monolayer: Complex hierarchies, patterns, tiling and writing to files" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial_methane.html" class="btn btn-neutral" title="Methane: Atoms, Bonds and Compounds" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2017, Vanderbilt University.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.6.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

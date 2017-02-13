@@ -1,0 +1,664 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Point Particles: Basic system initialization &mdash; mbuild 0.6.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mbuild 0.6.0.dev0 documentation" href="../index.html"/>
+        <link rel="up" title="Tutorials" href="tutorials.html"/>
+        <link rel="next" title="Data Structure" href="../data_structures.html"/>
+        <link rel="prev" title="Monolayer: Complex hierarchies, patterns, tiling and writing to files" href="tutorial_monolayer.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mbuild
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tutorial_methane.html">Methane: Atoms, Bonds and Compounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_ethane.html">Ethane: Reading from files, Ports and coordinate transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_monolayer.html">Monolayer: Complex hierarchies, patterns, tiling and writing to files</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Point Particles: Basic system initialization</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data_structures.html">Data Structure</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coordinate_transforms.html">Coordinate transformations</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../recipes.html">Recipes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">mbuild</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+      
+    <li>Point Particles: Basic system initialization</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorials/tutorial_simple_LJ.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="point-particles-basic-system-initialization">
+<h1>Point Particles: Basic system initialization<a class="headerlink" href="#point-particles-basic-system-initialization" title="Permalink to this headline">¶</a></h1>
+<p>Run this interactively by downloading the IPython Notebook file <a class="reference download internal" href="../_downloads/tutorial_simple_LJ.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial_simple_LJ.ipynb</span></code></a>.</p>
+
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<h1 id="Point-Particles:-Basic-system-initialization">Point Particles: Basic system initialization<a class="anchor-link" href="#Point-Particles:-Basic-system-initialization">&#182;</a></h1><p><strong>Note</strong>: mBuild expects all distance units to be in nanometers.</p>
+<p>This tutorial focuses on the usage of basic system initialization operations, as applied to simple point particle systems (i.e., generic Lennard-Jones particles rather than specific atoms).</p>
+<p>The code below defines several point particles in a cubic arrangement. Note, the color and radius associated with a Particle name can be set and passed to the visualize command.  Colors are passed in hex format (see <a href="http://www.color-hex.com/color/bfbfbf">http://www.color-hex.com/color/bfbfbf</a>).</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[1]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_particle1</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle1</span><span class="p">)</span>
+
+        <span class="n">lj_particle2</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle2</span><span class="p">)</span>
+
+        <span class="n">lj_particle3</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle3</span><span class="p">)</span>
+
+        <span class="n">lj_particle4</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle4</span><span class="p">)</span>
+
+        <span class="n">lj_particle5</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle5</span><span class="p">)</span>
+
+        <span class="n">lj_particle6</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle6</span><span class="p">)</span>
+
+        <span class="n">lj_particle7</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle7</span><span class="p">)</span>
+        
+        <span class="n">lj_particle8</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle8</span><span class="p">)</span>
+
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>While this would work for defining a single molecule or very small system, this would not be efficient for large systems.  Instead, the clone and translate operator can be used to facilitate automation. Below, we simply define a single prototype particle (lj_proto), which we then copy and translate about the system.</p>
+<p>Note, mBuild provides two different translate operations, "translate" and "translate_to".   "translate" moves a particle by adding the vector the original position, whereas "translate_to" move a particle to the specified location in space.  Note, "translate_to" maintains the internal spatial relationships of a collection of particles by first shifting the center of mass of the collection of particles to the origin, then translating to the specified location.  Since the lj_proto particle in this example starts at the origin, these two commands produce identical behavior.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[2]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+                    <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>To simplify this process, mBuild provides several build-in patterning tools, where for example,  Grid3DPattern can be used to perform this same operation.  Grid3DPattern generates a set of points, from 0 to 1, which get stored in the variable "pattern".  We need only loop over the points in pattern, cloning, translating, and adding to the system.  Note, because Grid3DPattern defines points between 0 and 1, they must be scaled based on the desired system size, i.e., pattern.scale(2).</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[3]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Grid3DPattern</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">pattern</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Larger systems can therefore be easily generated by toggling the values given to Grid3DPattern.  Other patterns can also be generated using the same basic code, such as a 2D grid pattern:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[4]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Grid2DPattern</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">pattern</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Points on a sphere can be generated using SpherePattern. Points on a disk using DisKPattern, etc.</p>
+<p>Note to show both simultaneously, we shift the x-coordinate of Particles in the sphere by -1 (i.e., pos[0]-=1.0) and +1 for the disk (i.e, pos[0]+=1.0).</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[5]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        
+        <span class="n">pattern_sphere</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">SpherePattern</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">pattern_sphere</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern_sphere</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-=</span><span class="mf">1.0</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+        
+        <span class="n">pattern_disk</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">DiskPattern</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">pattern_disk</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern_disk</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+=</span><span class="mf">1.0</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>We can also take advantage of the hierachical nature of mBuild to accomplish the same task more cleanly.  Below we  create a component that corresponds to the sphere (class SphereLJ), and one that corresponds to the disk (class DiskLJ), and then instantiate and shift each of these individually in the MonoLJ component.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[6]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">SphereLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SphereLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        
+        <span class="n">pattern_sphere</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">SpherePattern</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">pattern_sphere</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern_sphere</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">DiskLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DiskLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">pattern_disk</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">DiskPattern</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">pattern_disk</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern_disk</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        
+        <span class="n">sphere</span> <span class="o">=</span> <span class="n">SphereLJ</span><span class="p">();</span>
+        <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">sphere</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sphere</span><span class="p">)</span>
+
+        <span class="n">disk</span> <span class="o">=</span> <span class="n">DiskLJ</span><span class="p">();</span>
+        <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">disk</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">disk</span><span class="p">)</span>
+
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Again, since mBuild is hierarchical, the pattern functions can be used to generate large systems of any arbitary component.  For example, we can replicate the SphereLJ component on a regular array.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[7]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="k">class</span> <span class="nc">SphereLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SphereLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        
+        <span class="n">pattern_sphere</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">SpherePattern</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+        <span class="n">pattern_sphere</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern_sphere</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">sphere</span> <span class="o">=</span> <span class="n">SphereLJ</span><span class="p">();</span>
+
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Grid3DPattern</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">pattern</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="n">lj_sphere</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">sphere</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate_to</span><span class="p">(</span><span class="n">lj_sphere</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="c1">#shift the particle so the center of mass</span>
+            <span class="c1">#of the system is at the origin</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_sphere</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_sphere</span><span class="p">)</span>
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Several functions exist for rotating compounds. For example, the spin command allows a compound to be rotated, in place, about a specific axis (i.e., it considers the origin for the rotation to lie at the compound's center of mass).</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[8]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">pi</span>
+
+
+<span class="k">class</span> <span class="nc">CubeLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CubeLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">lj_proto</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;LJ&#39;</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Grid3DPattern</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">pattern</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="n">lj_particle</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">lj_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_particle</span><span class="p">)</span>
+            
+<span class="k">class</span> <span class="nc">MonoLJ</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MonoLJ</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">cube_proto</span> <span class="o">=</span> <span class="n">CubeLJ</span><span class="p">();</span>
+
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Grid3DPattern</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">pattern</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">rnd</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
+        <span class="n">rnd</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="n">lj_cube</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">cube_proto</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate_to</span><span class="p">(</span><span class="n">lj_cube</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="c1">#shift the particle so the center of mass</span>
+            <span class="c1">#of the system is at the origin</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">lj_cube</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">])</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">spin_x</span><span class="p">(</span><span class="n">lj_cube</span><span class="p">,</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span><span class="p">))</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">spin_y</span><span class="p">(</span><span class="n">lj_cube</span><span class="p">,</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span><span class="p">))</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">spin_z</span><span class="p">(</span><span class="n">lj_cube</span><span class="p">,</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lj_cube</span><span class="p">)</span>
+
+<span class="n">monoLJ</span> <span class="o">=</span> <span class="n">MonoLJ</span><span class="p">()</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Configurations can be dumped to file using the save command; this takes advantage of MDTraj and supports a range of file formats (see <a href="http://MDTraj.org">http://MDTraj.org</a>).</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#save as xyz file</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;output.xyz&#39;</span><span class="p">)</span>
+<span class="c1">#save as mol2</span>
+<span class="n">monoLJ</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;output.mol2&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div><p>(<a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_simple_LJ/tutorial_simple_LJ.ipynb">tutorial_simple_LJ.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_simple_LJ/tutorial_simple_LJ_eval.ipynb">tutorial_simple_LJ_eval.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_simple_LJ/tutorial_simple_LJ.py">tutorial_simple_LJ.py</a>)</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../data_structures.html" class="btn btn-neutral float-right" title="Data Structure" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial_monolayer.html" class="btn btn-neutral" title="Monolayer: Complex hierarchies, patterns, tiling and writing to files" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2017, Vanderbilt University.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.6.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

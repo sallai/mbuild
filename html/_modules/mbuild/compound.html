@@ -1,0 +1,1277 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mbuild.compound &mdash; mbuild 0.6.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="mbuild 0.6.0.dev0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mbuild
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../data_structures.html">Data Structure</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../coordinate_transforms.html">Coordinate transformations</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../recipes.html">Recipes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">mbuild</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>mbuild.compound</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mbuild.compound</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="s1">&#39;clone&#39;</span><span class="p">,</span> <span class="s1">&#39;Compound&#39;</span><span class="p">,</span> <span class="s1">&#39;Particle&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">import</span> <span class="nn">mdtraj</span> <span class="k">as</span> <span class="nn">md</span>
+<span class="kn">import</span> <span class="nn">nglview</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">oset</span> <span class="k">import</span> <span class="n">oset</span> <span class="k">as</span> <span class="n">OrderedSet</span>
+<span class="kn">import</span> <span class="nn">parmed</span> <span class="k">as</span> <span class="nn">pmd</span>
+<span class="kn">from</span> <span class="nn">parmed.periodic_table</span> <span class="k">import</span> <span class="n">AtomicNum</span><span class="p">,</span> <span class="n">element_by_name</span><span class="p">,</span> <span class="n">Mass</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="k">import</span> <span class="n">integer_types</span><span class="p">,</span> <span class="n">string_types</span>
+
+<span class="kn">from</span> <span class="nn">mbuild.bond_graph</span> <span class="k">import</span> <span class="n">BondGraph</span>
+<span class="kn">from</span> <span class="nn">mbuild.box</span> <span class="k">import</span> <span class="n">Box</span>
+<span class="kn">from</span> <span class="nn">mbuild.exceptions</span> <span class="k">import</span> <span class="n">MBuildError</span>
+<span class="kn">from</span> <span class="nn">mbuild.periodic_kdtree</span> <span class="k">import</span> <span class="n">PeriodicCKDTree</span>
+<span class="kn">from</span> <span class="nn">mbuild.utils.io</span> <span class="k">import</span> <span class="n">run_from_ipython</span>
+<span class="kn">from</span> <span class="nn">mbuild.formats.hoomdxml</span> <span class="k">import</span> <span class="n">write_hoomdxml</span>
+<span class="kn">from</span> <span class="nn">mbuild.formats.lammpsdata</span> <span class="k">import</span> <span class="n">write_lammpsdata</span>
+
+
+<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">relative_to_module</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compound</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coords_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load a file into an mbuild compound.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">    relative_to_module :</span>
+<span class="sd">    compound : mb.Compound, optional</span>
+<span class="sd">    coords_only : bool, optional</span>
+<span class="sd">        Only load the coordinates into an existing compoint.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    compound : mb.Compound</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Handle mbuild *.py files containing a class that wraps a structure file</span>
+    <span class="c1"># in its own folder. E.g., you build a system from ~/foo.py and it imports</span>
+    <span class="c1"># from ~/bar/baz.py where baz.py loads ~/bar/baz.pdb.</span>
+    <span class="k">if</span> <span class="n">relative_to_module</span><span class="p">:</span>
+        <span class="n">script_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">relative_to_module</span><span class="p">]</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span>
+        <span class="n">file_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">script_path</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">compound</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">compound</span> <span class="o">=</span> <span class="n">Compound</span><span class="p">()</span>
+
+    <span class="n">traj</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">compound</span><span class="o">.</span><span class="n">from_trajectory</span><span class="p">(</span><span class="n">traj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">coords_only</span><span class="o">=</span><span class="n">coords_only</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">compound</span>
+
+
+<span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="n">existing_compound</span><span class="p">,</span> <span class="n">clone_of</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root_container</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A faster alternative to deepcopying.</span>
+
+<span class="sd">    Does not resolve circular dependencies. This should be safe provided</span>
+<span class="sd">    you never try to add the top of a Compound hierarchy to a</span>
+<span class="sd">    sub-Compound.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">clone_of</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clone_of</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="n">newone</span> <span class="o">=</span> <span class="n">existing_compound</span><span class="o">.</span><span class="n">_clone</span><span class="p">(</span><span class="n">clone_of</span><span class="o">=</span><span class="n">clone_of</span><span class="p">,</span> <span class="n">root_container</span><span class="o">=</span><span class="n">root_container</span><span class="p">)</span>
+    <span class="n">existing_compound</span><span class="o">.</span><span class="n">_clone_bonds</span><span class="p">(</span><span class="n">clone_of</span><span class="o">=</span><span class="n">clone_of</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">newone</span>
+
+
+<div class="viewcode-block" id="Compound"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound">[docs]</a><span class="k">class</span> <span class="nc">Compound</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A building block in the mBuild hierarchy.</span>
+
+<span class="sd">    Compound is the superclass of all composite building blocks in the mBuild</span>
+<span class="sd">    hierarchy. That is, all composite building blocks must inherit from</span>
+<span class="sd">    compound, either directly or indirectly. The design of Compound follows the</span>
+<span class="sd">    Composite design pattern (Gamma, Erich; Richard Helm; Ralph Johnson; John</span>
+<span class="sd">    M. Vlissides (1995). Design Patterns: Elements of Reusable Object-Oriented</span>
+<span class="sd">    Software. Addison-Wesley. p. 395. ISBN 0-201-63361-2.), with Compound being</span>
+<span class="sd">    the composite, and Particle playing the role of the primitive (leaf) part,</span>
+<span class="sd">    where Particle is in fact simply an alias to the Compound class.</span>
+
+<span class="sd">    Compound maintains a list of children (other Compounds contained within), and</span>
+<span class="sd">    provides a means to tag the children with labels, so that the compounds can</span>
+<span class="sd">    be easily looked up later. Labels may also point to objects outside the</span>
+<span class="sd">    Compound&#39;s containment hierarchy. Compound has built-in support for copying</span>
+<span class="sd">    and deepcopying Compound hierarchies, enumerating particles or bonds in the</span>
+<span class="sd">    hierarchy, proximity based searches, visualization, I/O operations, and a</span>
+<span class="sd">    number of other convenience methods.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subcompounds : Compound, optional, default=None</span>
+<span class="sd">        One or more compounds to be added to self.</span>
+<span class="sd">    name : str, optional, default=self.__class__.__name__</span>
+<span class="sd">        The type of Compound.</span>
+<span class="sd">    periodicity : np.ndarray, shape=(3,), dtype=float, optional</span>
+<span class="sd">        The periodic lengths of the Compound in the x, y and z directions.</span>
+<span class="sd">        Defaults to zeros which is treated as non-periodic.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str, optional, default=self.__class__.__name__</span>
+<span class="sd">        The type of Compound.</span>
+<span class="sd">    periodicity : np.ndarray, shape=(3,), dtype=float, optional</span>
+<span class="sd">        The periodic lengths of the Compound in the x, y and z directions.</span>
+<span class="sd">        Defaults to zeros which is treated as non-periodic.</span>
+<span class="sd">    children : OrderedSet</span>
+<span class="sd">        Contains all children (other Compounds).</span>
+<span class="sd">    labels : OrderedDict</span>
+<span class="sd">        Labels to Compound/Atom mappings. These do not necessarily need not be</span>
+<span class="sd">        in self.children.</span>
+<span class="sd">    parent : mb.Compound</span>
+<span class="sd">        The parent Compound that contains this part. Can be None if this</span>
+<span class="sd">        compound is the root of the containment hierarchy.</span>
+<span class="sd">    referrers : set</span>
+<span class="sd">        Other compounds that reference this part with labels.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcompounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">periodicity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">port_particle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Compound</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Compound.name should be a string. You passed &#39;</span>
+                                 <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="c1"># A periodocity of zero in any direction is treated as non-periodic.</span>
+        <span class="k">if</span> <span class="n">periodicity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_periodicity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_periodicity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">periodicity</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="n">charge</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">referrers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bond_graph</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port_particle</span> <span class="o">=</span> <span class="n">port_particle</span>
+
+        <span class="c1"># self.add() must be called after labels and children are initialized.</span>
+        <span class="k">if</span> <span class="n">subcompounds</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subcompounds</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Compound.particles"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.particles">[docs]</a>    <span class="k">def</span> <span class="nf">particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_particles</span><span class="p">(</span><span class="n">include_ports</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">particle</span></div>
+
+    <span class="k">def</span> <span class="nf">_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all Particles of the Compound. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">successors</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">include_ports</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">child</span><span class="o">.</span><span class="n">port_particle</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">child</span>
+
+<div class="viewcode-block" id="Compound.successors"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.successors">[docs]</a>    <span class="k">def</span> <span class="nf">successors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Yield Compounds below self in the hierarchy. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="c1"># Parts local to the current Compound.</span>
+            <span class="k">yield</span> <span class="n">part</span>
+            <span class="c1"># Parts further down the hierarchy.</span>
+            <span class="k">for</span> <span class="n">subpart</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">successors</span><span class="p">():</span>
+                <span class="k">yield</span> <span class="n">subpart</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_particles</span><span class="p">(</span><span class="n">include_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_n_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of Particles in the Compound. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_particles</span><span class="p">(</span><span class="n">include_ports</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_contains_only_ports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">part</span><span class="o">.</span><span class="n">port_particle</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Compound.ancestors"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.ancestors">[docs]</a>    <span class="k">def</span> <span class="nf">ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate all ancestors of the Compound recursively. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">for</span> <span class="n">ancestor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+                <span class="k">yield</span> <span class="n">ancestor</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="n">parent</span>
+
+    <span class="k">def</span> <span class="nf">particles_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">particle</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">particle</span>
+
+<div class="viewcode-block" id="Compound.add"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_child</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">containment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">inherit_periodicity</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a part to the Compound.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This does not necessarily add the part to self.children but may</span>
+<span class="sd">            instead be used to add a reference to the part to self.labels. See</span>
+<span class="sd">            &#39;containment&#39; argument.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_child : mb.Compound or list-like of mb.Compound</span>
+<span class="sd">            The object(s) to be added to this Compound.</span>
+<span class="sd">        label : str, optional</span>
+<span class="sd">            A descriptive string for the part.</span>
+<span class="sd">        containment : bool, optional, default=True</span>
+<span class="sd">            Add the part to self.children.</span>
+<span class="sd">        replace : bool, optional, default=True</span>
+<span class="sd">            Replace the label if it already exists.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Support batch add via lists, tuples and sets.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">new_child</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_child</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">new_child</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_child</span><span class="p">,</span> <span class="n">Compound</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only objects that inherit from mbuild.Compound &#39;</span>
+                             <span class="s1">&#39;can be added to Compounds. You tried to add &#39;</span>
+                             <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_child</span><span class="p">))</span>
+
+        <span class="c1"># Create children and labels on the first add operation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">containment</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">new_child</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">MBuildError</span><span class="p">(</span><span class="s1">&#39;Part </span><span class="si">{}</span><span class="s1"> already has a parent: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">new_child</span><span class="p">,</span> <span class="n">new_child</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_child</span><span class="p">)</span>
+            <span class="n">new_child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
+
+            <span class="k">if</span> <span class="n">new_child</span><span class="o">.</span><span class="n">bond_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span> <span class="o">=</span> <span class="n">new_child</span><span class="o">.</span><span class="n">bond_graph</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">new_child</span><span class="o">.</span><span class="n">bond_graph</span><span class="p">)</span>
+
+                <span class="n">new_child</span><span class="o">.</span><span class="n">bond_graph</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Add new_part to labels. Does not currently support batch add.</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">[$]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_child</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;[$]&#39;</span><span class="p">):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">label</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">label_pattern</span> <span class="o">=</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;[</span><span class="si">{}</span><span class="s1">]&#39;</span>
+
+            <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_child</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">label_pattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">replace</span> <span class="ow">and</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MBuildError</span><span class="p">(</span><span class="s1">&#39;Label &quot;</span><span class="si">{0}</span><span class="s1">&quot; already exists in </span><span class="si">{1}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_child</span>
+        <span class="n">new_child</span><span class="o">.</span><span class="n">referrers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">inherit_periodicity</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_child</span><span class="p">,</span> <span class="n">Compound</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">new_child</span><span class="o">.</span><span class="n">periodicity</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="n">new_child</span><span class="o">.</span><span class="n">periodicity</span></div>
+
+<div class="viewcode-block" id="Compound.remove"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objs_to_remove</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove children from the Compound. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">objs_to_remove</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">objs_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">objs_to_remove</span><span class="p">]</span>
+        <span class="n">objs_to_remove</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">objs_to_remove</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">objs_to_remove</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">objs_to_remove</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">-=</span> <span class="n">intersection</span>
+        <span class="n">objs_to_remove</span> <span class="o">-=</span> <span class="n">intersection</span>
+
+        <span class="k">for</span> <span class="n">removed_part</span> <span class="ow">in</span> <span class="n">intersection</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">has_node</span><span class="p">(</span><span class="n">removed_part</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">removed_part</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_references</span><span class="p">(</span><span class="n">removed_part</span><span class="p">)</span>
+
+        <span class="c1"># Remove the part recursively from sub-compounds.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="n">part</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">objs_to_remove</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_remove_references</span><span class="p">(</span><span class="n">removed_part</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove labels pointing to this part and vice versa. &quot;&quot;&quot;</span>
+        <span class="n">removed_part</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Remove labels in the hierarchy pointing to this part.</span>
+        <span class="n">referrers_to_remove</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">referrer</span> <span class="ow">in</span> <span class="n">removed_part</span><span class="o">.</span><span class="n">referrers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">removed_part</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">referrer</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">referred_part</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">referrer</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                    <span class="k">if</span> <span class="n">referred_part</span> <span class="ow">is</span> <span class="n">removed_part</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">referrer</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
+                        <span class="n">referrers_to_remove</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">referrer</span><span class="p">)</span>
+        <span class="n">removed_part</span><span class="o">.</span><span class="n">referrers</span> <span class="o">-=</span> <span class="n">referrers_to_remove</span>
+
+        <span class="c1"># Remove labels in this part pointing into the hierarchy.</span>
+        <span class="n">labels_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">removed_part</span><span class="p">,</span> <span class="n">Compound</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">removed_part</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">removed_part</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+                    <span class="n">part</span><span class="o">.</span><span class="n">referrers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">removed_part</span><span class="p">)</span>
+                    <span class="n">labels_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels_to_delete</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">removed_part</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Compound.referenced_ports"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.referenced_ports">[docs]</a>    <span class="k">def</span> <span class="nf">referenced_ports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all Ports referenced by this Compound. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">mbuild.port</span> <span class="k">import</span> <span class="n">Port</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">port</span> <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">Port</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Compound.available_ports"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.available_ports">[docs]</a>    <span class="k">def</span> <span class="nf">available_ports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all unoccupied Ports referenced by this Compound. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">mbuild.port</span> <span class="k">import</span> <span class="n">Port</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">port</span> <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="n">Port</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">port</span><span class="o">.</span><span class="n">used</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Compound.bonds"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.bonds">[docs]</a>    <span class="k">def</span> <span class="nf">bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A list of all Bonds in the Compound and sub-Compounds. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">==</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">())</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(())</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of Bonds in the Compound. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">add_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_pair</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span> <span class="o">=</span> <span class="n">BondGraph</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">particle_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">particle_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Compound.generate_bonds"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.generate_bonds">[docs]</a>    <span class="k">def</span> <span class="nf">generate_bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_a</span><span class="p">,</span> <span class="n">name_b</span><span class="p">,</span> <span class="n">dmin</span><span class="p">,</span> <span class="n">dmax</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add Bonds between all pairs of types a/b within [dmin, dmax]. &quot;&quot;&quot;</span>
+        <span class="n">particle_kdtree</span> <span class="o">=</span> <span class="n">PeriodicCKDTree</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">)</span>
+        <span class="n">particle_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">()))</span>
+        <span class="n">added_bonds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles_by_name</span><span class="p">(</span><span class="n">name_a</span><span class="p">):</span>
+            <span class="n">nearest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles_in_range</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">dmax</span><span class="p">,</span> <span class="n">max_particles</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                                              <span class="n">particle_kdtree</span><span class="o">=</span><span class="n">particle_kdtree</span><span class="p">,</span>
+                                              <span class="n">particle_array</span><span class="o">=</span><span class="n">particle_array</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">nearest</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">p2</span> <span class="o">==</span> <span class="n">p1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">bond_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span> <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">id</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">p1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">bond_tuple</span> <span class="ow">in</span> <span class="n">added_bonds</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name_b</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dmin</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_periodic_distance</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">p1</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">dmax</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">))</span>
+                    <span class="n">added_bonds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bond_tuple</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">remove_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_pair</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="o">*</span><span class="n">particle_pair</span><span class="p">):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Bond between </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> doesn&#39;t exist!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">particle_pair</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">bond_graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="o">*</span><span class="n">particle_pair</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+
+    <span class="nd">@pos</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MBuildError</span><span class="p">(</span><span class="s1">&#39;Cannot set position on a Compound that has&#39;</span>
+                              <span class="s1">&#39; children.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">periodicity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_periodicity</span>
+
+    <span class="nd">@periodicity</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">periodicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">periods</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_periodicity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">periods</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">xyz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all particle coordinates in this compound.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pos : np.ndarray, shape=(n, 3)</span>
+<span class="sd">            Array with the positions of all particles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span>
+                <span class="n">particle</span><span class="o">.</span><span class="n">pos</span> <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pos</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">xyz_with_ports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all particle coordinates in this compound including ports. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span>
+                <span class="n">particle</span><span class="o">.</span><span class="n">pos</span> <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">(</span><span class="n">include_ports</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pos</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The cartesian center of the Compound based on its Atoms. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundingbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the bounding box of the compound. &quot;&quot;&quot;</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xyz</span>
+        <span class="k">return</span> <span class="n">Box</span><span class="p">(</span><span class="n">mins</span><span class="o">=</span><span class="n">xyz</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">maxs</span><span class="o">=</span><span class="n">xyz</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Compound.min_periodic_distance"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.min_periodic_distance">[docs]</a>    <span class="k">def</span> <span class="nf">min_periodic_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xyz0</span><span class="p">,</span> <span class="n">xyz1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Vectorized distance calculation considering minimum image. &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xyz0</span> <span class="o">-</span> <span class="n">xyz1</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">d</span> <span class="o">&gt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">d</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Compound.particles_in_range"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.particles_in_range">[docs]</a>    <span class="k">def</span> <span class="nf">particles_in_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compound</span><span class="p">,</span> <span class="n">dmax</span><span class="p">,</span> <span class="n">max_particles</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">particle_kdtree</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">particle_array</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find particles within a specified range of another particle. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">particle_kdtree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">particle_kdtree</span> <span class="o">=</span> <span class="n">PeriodicCKDTree</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xyz</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">idxs</span> <span class="o">=</span> <span class="n">particle_kdtree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">compound</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">max_particles</span><span class="p">,</span> <span class="n">distance_upper_bound</span><span class="o">=</span><span class="n">dmax</span><span class="p">)</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[</span><span class="n">idxs</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_particles</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">particle_array</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">particle_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">particle_array</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Compound.view_hierarchy"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.view_hierarchy">[docs]</a>    <span class="k">def</span> <span class="nf">view_hierarchy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visualize a compound hierarchy as a tree. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Coming soon!&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compound.visualize"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.visualize">[docs]</a>    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visualize the Compound using nglview. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">run_from_ipython</span><span class="p">():</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_trajectory</span><span class="p">(</span><span class="n">show_ports</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">nglview</span><span class="o">.</span><span class="n">show_mdtraj</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Visualization is only supported in Jupyter &#39;</span>
+                               <span class="s1">&#39;Notebooks.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compound.update_coordinates"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.update_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">update_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the coordinates of this Compound from a file. &quot;&quot;&quot;</span>
+        <span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">compound</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compound.save"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">show_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">forcefield_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">box</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the Compound to a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            Filesystem path in which to save the trajectory. The extension or</span>
+<span class="sd">            prefix will be parsed and will control the format.</span>
+<span class="sd">        show_ports : bool, default=False</span>
+<span class="sd">            Save ports contained within the compound.</span>
+<span class="sd">        forcefield_name : str, default=None</span>
+<span class="sd">            Apply a forcefield to the output file using a forcefield provided</span>
+<span class="sd">            by the `foyer` package.</span>
+<span class="sd">        forcefield_name : str, default=None</span>
+<span class="sd">            Apply a forcefield to the output file using the `foyer` package and</span>
+<span class="sd">            a specific forcefield.xml file.</span>
+
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        force_overwrite : bool</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">savers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;.hoomdxml&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_hoomdxml</span><span class="p">,</span>
+                  <span class="s1">&#39;.gsd&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_gsd</span><span class="p">,</span>
+                  <span class="s1">&#39;.gro&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_gromacs</span><span class="p">,</span>
+                  <span class="s1">&#39;.top&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_gromacs</span><span class="p">,</span>
+                  <span class="s1">&#39;.lammps&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_lammpsdata</span><span class="p">,</span>
+                  <span class="s1">&#39;.lmp&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_lammpsdata</span><span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">saver</span> <span class="o">=</span> <span class="n">savers</span><span class="p">[</span><span class="n">extension</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># TODO: better reporting</span>
+            <span class="n">saver</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_parmed</span><span class="p">(</span><span class="n">show_ports</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">saver</span><span class="p">:</span>  <span class="c1"># mBuild/InterMol supported saver.</span>
+            <span class="k">return</span> <span class="n">saver</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="p">,</span>
+                         <span class="n">forcefield_files</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># ParmEd supported saver.</span>
+            <span class="k">return</span> <span class="n">structure</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_apply_forcefield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_files</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">foyer</span> <span class="k">import</span> <span class="n">Forcefield</span>
+        <span class="n">ff</span> <span class="o">=</span> <span class="n">Forcefield</span><span class="p">(</span><span class="n">forcefield_files</span><span class="o">=</span><span class="n">forcefield_files</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">forcefield_name</span><span class="p">)</span>
+        <span class="n">structure</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">structure</span>
+
+    <span class="k">def</span> <span class="nf">_gen_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundingbox</span>
+        <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">lengths</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">maxs</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">mins</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">maxs</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.25</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">mins</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.25</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">lengths</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span>
+        <span class="k">return</span> <span class="n">box</span>
+
+<div class="viewcode-block" id="Compound.save_hoomdxml"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.save_hoomdxml">[docs]</a>    <span class="k">def</span> <span class="nf">save_hoomdxml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="p">,</span>
+                      <span class="n">forcefield_files</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">forcefield_name</span> <span class="ow">or</span> <span class="n">forcefield_files</span><span class="p">:</span>
+            <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_forcefield</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_files</span><span class="p">,</span>
+                                               <span class="n">forcefield_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_box</span><span class="p">()</span>
+        <span class="n">write_hoomdxml</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">forcefield</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compound.save_gsd"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.save_gsd">[docs]</a>    <span class="k">def</span> <span class="nf">save_gsd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="p">,</span>
+                      <span class="n">forcefield_files</span><span class="p">,</span> <span class="n">box</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">mbuild.formats.gsdwriter</span> <span class="k">import</span> <span class="n">write_gsd</span>
+        <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">forcefield_name</span> <span class="ow">or</span> <span class="n">forcefield_files</span><span class="p">:</span>
+            <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_forcefield</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_files</span><span class="p">,</span>
+                                               <span class="n">forcefield_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_box</span><span class="p">()</span>
+        <span class="n">write_gsd</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">forcefield</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compound.save_gromacs"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.save_gromacs">[docs]</a>    <span class="k">def</span> <span class="nf">save_gromacs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="p">,</span>
+                      <span class="n">forcefield_files</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="c1"># Create separate file paths for .gro and .top</span>
+        <span class="n">filepath</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">top_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.top&#39;</span><span class="p">)</span>
+        <span class="n">gro_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.gro&#39;</span><span class="p">)</span>
+
+        <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">forcefield_name</span> <span class="ow">or</span> <span class="n">forcefield_files</span><span class="p">:</span>
+            <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_forcefield</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_files</span><span class="p">,</span>
+                                               <span class="n">forcefield_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_box</span><span class="p">()</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">top_filename</span><span class="p">,</span> <span class="s1">&#39;gromacs&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">gro_filename</span><span class="p">,</span> <span class="s1">&#39;gro&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compound.save_lammpsdata"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.save_lammpsdata">[docs]</a>    <span class="k">def</span> <span class="nf">save_lammpsdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_name</span><span class="p">,</span>
+                      <span class="n">forcefield_files</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">forcefield_name</span> <span class="ow">or</span> <span class="n">forcefield_files</span><span class="p">:</span>
+            <span class="n">forcefield</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_forcefield</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">forcefield_files</span><span class="p">,</span>
+                                               <span class="n">forcefield_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_box</span><span class="p">()</span>
+        <span class="n">write_lammpsdata</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">forcefield</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="c1"># Interface to Trajectory for reading/writing .pdb and .mol2 files.</span>
+    <span class="c1"># -----------------------------------------------------------------</span>
+<div class="viewcode-block" id="Compound.from_trajectory"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.from_trajectory">[docs]</a>    <span class="k">def</span> <span class="nf">from_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">coords_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract atoms and bonds from a md.Trajectory.</span>
+
+<span class="sd">        Will create sub-compounds for every chain if there is more than one</span>
+<span class="sd">        and sub-sub-compounds for every residue.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        traj : md.Trajectory</span>
+<span class="sd">            The trajectory to load.</span>
+<span class="sd">        frame : int</span>
+<span class="sd">            The frame to take coordinates from.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">coords_only</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">traj</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_particles</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Number of atoms in </span><span class="si">{traj}</span><span class="s1"> does not match&#39;</span>
+                                 <span class="s1">&#39; </span><span class="si">{self}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+            <span class="n">atoms_particles</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">_particles</span><span class="p">(</span><span class="n">include_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">mdtraj_atom</span><span class="p">,</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">atoms_particles</span><span class="p">:</span>
+                <span class="n">particle</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">xyz</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">mdtraj_atom</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">return</span>
+
+        <span class="n">atom_mapping</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">chains</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">n_chains</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">chain_compound</span> <span class="o">=</span> <span class="n">Compound</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">chain_compound</span><span class="p">,</span> <span class="s1">&#39;chain[$]&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">chain_compound</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">chain</span><span class="o">.</span><span class="n">residues</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
+                    <span class="n">new_atom</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">pos</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">xyz</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+                    <span class="n">chain_compound</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_atom</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">[$]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                    <span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_atom</span>
+
+        <span class="k">for</span> <span class="n">mdtraj_atom1</span><span class="p">,</span> <span class="n">mdtraj_atom2</span> <span class="ow">in</span> <span class="n">traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">bonds</span><span class="p">:</span>
+            <span class="n">atom1</span> <span class="o">=</span> <span class="n">atom_mapping</span><span class="p">[</span><span class="n">mdtraj_atom1</span><span class="p">]</span>
+            <span class="n">atom2</span> <span class="o">=</span> <span class="n">atom_mapping</span><span class="p">[</span><span class="n">mdtraj_atom2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">unitcell_lengths</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">unitcell_lengths</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">unitcell_lengths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Compound.to_trajectory"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.to_trajectory">[docs]</a>    <span class="k">def</span> <span class="nf">to_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">chain_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">residue_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert to an md.Trajectory and flatten the compound.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_ports : bool, optional, default=False</span>
+<span class="sd">            Include all port atoms when converting to trajectory.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trajectory : md.Trajectory</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        _to_topology</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">mdtraj</span> <span class="k">as</span> <span class="nn">md</span>
+
+        <span class="n">atom_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">particle</span> <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">(</span><span class="n">show_ports</span><span class="p">)]</span>
+
+        <span class="n">top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_topology</span><span class="p">(</span><span class="n">atom_list</span><span class="p">,</span> <span class="n">chain_types</span><span class="p">,</span> <span class="n">residue_types</span><span class="p">)</span>
+
+        <span class="c1"># Coordinates.</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">top</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atom_list</span><span class="p">):</span>
+            <span class="n">xyz</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">pos</span>
+
+        <span class="c1"># Unitcell information.</span>
+        <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundingbox</span>
+        <span class="n">unitcell_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
+                <span class="n">unitcell_lengths</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">unitcell_lengths</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">box</span><span class="o">.</span><span class="n">lengths</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">md</span><span class="o">.</span><span class="n">Trajectory</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">unitcell_lengths</span><span class="o">=</span><span class="n">unitcell_lengths</span><span class="p">,</span>
+                             <span class="n">unitcell_angles</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">]))</span></div>
+
+    <span class="k">def</span> <span class="nf">_to_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_list</span><span class="p">,</span> <span class="n">chain_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">residue_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a mdtraj.Topology from a Compound.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        atom_list :</span>
+<span class="sd">        chain_types :</span>
+<span class="sd">        residue_types :</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        top : mtraj.Topology</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">mdtraj.core.element</span> <span class="k">import</span> <span class="n">get_by_symbol</span>
+        <span class="kn">from</span> <span class="nn">mdtraj.core.topology</span> <span class="k">import</span> <span class="n">Topology</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chain_types</span><span class="p">,</span> <span class="n">Compound</span><span class="p">):</span>
+            <span class="n">chain_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">Compound</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chain_types</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">set</span><span class="p">)):</span>
+            <span class="n">chain_types</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">chain_types</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">residue_types</span><span class="p">,</span> <span class="n">Compound</span><span class="p">):</span>
+            <span class="n">residue_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">Compound</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">residue_types</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">set</span><span class="p">)):</span>
+            <span class="n">residue_types</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">residue_types</span><span class="p">)</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+        <span class="n">atom_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">default_chain</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">add_chain</span><span class="p">()</span>
+        <span class="n">default_residue</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">add_residue</span><span class="p">(</span><span class="s1">&#39;RES&#39;</span><span class="p">,</span> <span class="n">default_chain</span><span class="p">)</span>
+
+        <span class="n">last_residue_compound</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">last_chain_compound</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">last_residue</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">last_chain</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atom_list</span><span class="p">:</span>
+            <span class="c1"># Chains</span>
+            <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">atom</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">chain_types</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">chain_types</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">parent</span> <span class="o">!=</span> <span class="n">last_chain_compound</span><span class="p">:</span>
+                        <span class="n">last_chain_compound</span> <span class="o">=</span> <span class="n">parent</span>
+                        <span class="n">last_chain</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">add_chain</span><span class="p">()</span>
+                        <span class="n">last_chain_default_residue</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">add_residue</span><span class="p">(</span><span class="s1">&#39;RES&#39;</span><span class="p">,</span> <span class="n">last_chain</span><span class="p">)</span>
+                        <span class="n">last_chain</span><span class="o">.</span><span class="n">compound</span> <span class="o">=</span> <span class="n">last_chain_compound</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">last_chain</span> <span class="o">=</span> <span class="n">default_chain</span>
+                <span class="n">last_chain</span><span class="o">.</span><span class="n">compound</span> <span class="o">=</span> <span class="n">last_chain_compound</span>
+
+            <span class="c1"># Residues</span>
+            <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">atom</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">residue_types</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">residue_types</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">parent</span> <span class="o">!=</span> <span class="n">last_residue_compound</span><span class="p">:</span>
+                        <span class="n">last_residue_compound</span> <span class="o">=</span> <span class="n">parent</span>
+                        <span class="n">last_residue</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">add_residue</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">last_chain</span><span class="p">)</span>
+                        <span class="n">last_residue</span><span class="o">.</span><span class="n">compound</span> <span class="o">=</span> <span class="n">last_residue_compound</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">last_chain</span> <span class="o">!=</span> <span class="n">default_chain</span><span class="p">:</span>
+                    <span class="n">last_residue</span> <span class="o">=</span> <span class="n">last_chain_default_residue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">last_residue</span> <span class="o">=</span> <span class="n">default_residue</span>
+                <span class="n">last_residue</span><span class="o">.</span><span class="n">compound</span> <span class="o">=</span> <span class="n">last_residue_compound</span>
+
+            <span class="c1"># Add the actual atoms</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="n">get_by_symbol</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="n">get_by_symbol</span><span class="p">(</span><span class="s2">&quot;VS&quot;</span><span class="p">)</span>
+            <span class="n">at</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">add_atom</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">last_residue</span><span class="p">)</span>
+            <span class="n">at</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">charge</span>
+            <span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom</span><span class="p">]</span> <span class="o">=</span> <span class="n">at</span>
+
+        <span class="c1"># Remove empty default residues.</span>
+        <span class="n">chains_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">chain</span> <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">top</span><span class="o">.</span><span class="n">chains</span> <span class="k">if</span> <span class="n">chain</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">residues_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">res</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">top</span><span class="o">.</span><span class="n">residues</span> <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">chains_to_remove</span><span class="p">:</span>
+            <span class="n">top</span><span class="o">.</span><span class="n">_chains</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">residues_to_remove</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">top</span><span class="o">.</span><span class="n">chains</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">chain</span><span class="o">.</span><span class="n">_residues</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># Already gone.</span>
+                    <span class="k">pass</span>
+
+        <span class="k">for</span> <span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span><span class="p">():</span>
+            <span class="c1"># Ensure that both atoms are part of the compound. This becomes an</span>
+            <span class="c1"># issue if you try to convert a sub-compound to a topology which is</span>
+            <span class="c1"># bonded to a different subcompound.</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">a</span> <span class="ow">in</span> <span class="n">atom_mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">]):</span>
+                <span class="n">top</span><span class="o">.</span><span class="n">add_bond</span><span class="p">(</span><span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom1</span><span class="p">],</span> <span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">top</span>
+
+<div class="viewcode-block" id="Compound.from_parmed"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.from_parmed">[docs]</a>    <span class="k">def</span> <span class="nf">from_parmed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">coords_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract atoms and bonds from a pmd.Structure.</span>
+
+<span class="sd">        Will create sub-compounds for every chain if there is more than one</span>
+<span class="sd">        and sub-sub-compounds for every residue.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        structure : pmd.Structure</span>
+<span class="sd">            The structure to load.</span>
+<span class="sd">        coords_only : bool</span>
+<span class="sd">            Set preexisting atoms in compound to coordinates given by structure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">coords_only</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_particles</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Number of atoms in </span><span class="si">{structure}</span><span class="s1"> does not match&#39;</span>
+                                 <span class="s1">&#39; </span><span class="si">{self}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">()))</span>
+            <span class="n">atoms_particles</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">_particles</span><span class="p">(</span><span class="n">include_ports</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">parmed_atom</span><span class="p">,</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">atoms_particles</span><span class="p">:</span>
+                <span class="n">particle</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="n">parmed_atom</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">return</span>
+
+        <span class="n">atom_mapping</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">chain_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">residue</span> <span class="ow">in</span> <span class="n">structure</span><span class="o">.</span><span class="n">residues</span><span class="p">:</span>
+            <span class="n">chains</span><span class="p">[</span><span class="n">residue</span><span class="o">.</span><span class="n">chain</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">residue</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">chain</span><span class="p">,</span> <span class="n">residues</span> <span class="ow">in</span> <span class="n">chains</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">chain_compound</span> <span class="o">=</span> <span class="n">Compound</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">chain_compound</span><span class="p">,</span> <span class="n">chain_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">chain_compound</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">for</span> <span class="n">residue</span> <span class="ow">in</span> <span class="n">residues</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">residue</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
+                    <span class="n">new_atom</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">pos</span><span class="o">=</span><span class="n">structure</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">idx</span><span class="p">])</span>
+                    <span class="n">chain_compound</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_atom</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">[$]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                    <span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_atom</span>
+
+        <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">structure</span><span class="o">.</span><span class="n">bonds</span><span class="p">:</span>
+            <span class="n">atom1</span> <span class="o">=</span> <span class="n">atom_mapping</span><span class="p">[</span><span class="n">bond</span><span class="o">.</span><span class="n">atom1</span><span class="p">]</span>
+            <span class="n">atom2</span> <span class="o">=</span> <span class="n">atom_mapping</span><span class="p">[</span><span class="n">bond</span><span class="o">.</span><span class="n">atom2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">structure</span><span class="o">.</span><span class="n">box</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Compound.to_parmed"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.to_parmed">[docs]</a>    <span class="k">def</span> <span class="nf">to_parmed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a ParmEd Structure from a Compound. &quot;&quot;&quot;</span>
+        <span class="n">structure</span> <span class="o">=</span> <span class="n">pmd</span><span class="o">.</span><span class="n">Structure</span><span class="p">()</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">atom_mapping</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># For creating bonds below</span>
+        <span class="n">guessed_elements</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">():</span>
+            <span class="n">atomic_number</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">atomic_number</span> <span class="o">=</span> <span class="n">AtomicNum</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">element</span> <span class="o">=</span> <span class="n">element_by_name</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">guessed_elements</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Guessing that &quot;</span><span class="si">{}</span><span class="s1">&quot; is element: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="n">element</span><span class="p">))</span>
+                    <span class="n">guessed_elements</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">element</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="n">atomic_number</span> <span class="o">=</span> <span class="n">atomic_number</span> <span class="ow">or</span> <span class="n">AtomicNum</span><span class="p">[</span><span class="n">element</span><span class="p">]</span>
+            <span class="n">mass</span> <span class="o">=</span> <span class="n">Mass</span><span class="p">[</span><span class="n">element</span><span class="p">]</span>
+            <span class="n">pmd_atom</span> <span class="o">=</span> <span class="n">pmd</span><span class="o">.</span><span class="n">Atom</span><span class="p">(</span><span class="n">atomic_number</span><span class="o">=</span><span class="n">atomic_number</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                <span class="n">mass</span><span class="o">=</span><span class="n">mass</span><span class="p">)</span>
+            <span class="n">pmd_atom</span><span class="o">.</span><span class="n">xx</span><span class="p">,</span> <span class="n">pmd_atom</span><span class="o">.</span><span class="n">xy</span><span class="p">,</span> <span class="n">pmd_atom</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">pos</span> <span class="o">*</span> <span class="mi">10</span>  <span class="c1"># Angstroms</span>
+            <span class="n">structure</span><span class="o">.</span><span class="n">add_atom</span><span class="p">(</span><span class="n">pmd_atom</span><span class="p">,</span> <span class="n">resname</span><span class="o">=</span><span class="s1">&#39;RES&#39;</span><span class="p">,</span> <span class="n">resnum</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom</span><span class="p">]</span> <span class="o">=</span> <span class="n">pmd_atom</span>
+
+        <span class="k">for</span> <span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span><span class="p">():</span>
+            <span class="n">bond</span> <span class="o">=</span> <span class="n">pmd</span><span class="o">.</span><span class="n">Bond</span><span class="p">(</span><span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom1</span><span class="p">],</span> <span class="n">atom_mapping</span><span class="p">[</span><span class="n">atom2</span><span class="p">])</span>
+            <span class="n">structure</span><span class="o">.</span><span class="n">bonds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+
+        <span class="n">box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundingbox</span>
+        <span class="n">box_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">box_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">box_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">box_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">90.0</span>
+        <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val</span><span class="p">:</span>
+                <span class="n">box_vector</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span> <span class="o">*</span> <span class="mi">10</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">box_vector</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">box</span><span class="o">.</span><span class="n">lengths</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">5</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">box</span> <span class="o">=</span> <span class="n">box_vector</span>
+        <span class="k">return</span> <span class="n">structure</span></div>
+
+<div class="viewcode-block" id="Compound.to_intermol"><a class="viewcode-back" href="../../data_structures.html#mbuild.compound.Compound.to_intermol">[docs]</a>    <span class="k">def</span> <span class="nf">to_intermol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">molecule_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an InterMol system from a Compound.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        molecule_types : list or tuple of subclasses of Compound</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        intermol_system : intermol.system.System</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">intermol.atom</span> <span class="k">import</span> <span class="n">Atom</span> <span class="k">as</span> <span class="n">InterMolAtom</span>
+        <span class="kn">from</span> <span class="nn">intermol.molecule</span> <span class="k">import</span> <span class="n">Molecule</span>
+        <span class="kn">from</span> <span class="nn">intermol.system</span> <span class="k">import</span> <span class="n">System</span>
+        <span class="kn">import</span> <span class="nn">simtk.unit</span> <span class="k">as</span> <span class="nn">u</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">molecule_types</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">molecule_types</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">molecule_types</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">molecule_types</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">molecule_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),)</span>
+        <span class="n">intermol_system</span> <span class="o">=</span> <span class="n">System</span><span class="p">()</span>
+
+        <span class="n">last_molecule_compound</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">atom_index</span><span class="p">,</span> <span class="n">atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">atom</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span>
+                <span class="c1"># Don&#39;t want inheritance via isinstance().</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span> <span class="ow">in</span> <span class="n">molecule_types</span><span class="p">:</span>
+                    <span class="c1"># Check if we have encountered this molecule type before.</span>
+                    <span class="k">if</span> <span class="n">parent</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">intermol_system</span><span class="o">.</span><span class="n">molecule_types</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_add_intermol_molecule_type</span><span class="p">(</span><span class="n">intermol_system</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">parent</span> <span class="o">!=</span> <span class="n">last_molecule_compound</span><span class="p">:</span>
+                        <span class="n">last_molecule_compound</span> <span class="o">=</span> <span class="n">parent</span>
+                        <span class="n">last_molecule</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">intermol_system</span><span class="o">.</span><span class="n">add_molecule</span><span class="p">(</span><span class="n">last_molecule</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Should never happen if molecule_types only contains type(self)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Found an atom </span><span class="si">{}</span><span class="s1"> that is not part of any of &#39;</span>
+                                 <span class="s1">&#39;the specified molecule types </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">atom</span><span class="p">,</span> <span class="n">molecule_types</span><span class="p">))</span>
+
+            <span class="c1"># Add the actual intermol atoms.</span>
+            <span class="n">intermol_atom</span> <span class="o">=</span> <span class="n">InterMolAtom</span><span class="p">(</span><span class="n">atom_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                         <span class="n">residue_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">residue_name</span><span class="o">=</span><span class="s1">&#39;RES&#39;</span><span class="p">)</span>
+            <span class="n">intermol_atom</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">pos</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">nanometers</span>
+            <span class="n">last_molecule</span><span class="o">.</span><span class="n">add_atom</span><span class="p">(</span><span class="n">intermol_atom</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">intermol_system</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_add_intermol_molecule_type</span><span class="p">(</span><span class="n">intermol_system</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a molecule type for the parent and add bonds. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">intermol.moleculetype</span> <span class="k">import</span> <span class="n">MoleculeType</span>
+        <span class="kn">from</span> <span class="nn">intermol.forces.bond</span> <span class="k">import</span> <span class="n">Bond</span> <span class="k">as</span> <span class="n">InterMolBond</span>
+
+        <span class="n">molecule_type</span> <span class="o">=</span> <span class="n">MoleculeType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">intermol_system</span><span class="o">.</span><span class="n">add_molecule_type</span><span class="p">(</span><span class="n">molecule_type</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">parent_atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">particles</span><span class="p">()):</span>
+            <span class="n">parent_atom</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="n">parent</span><span class="o">.</span><span class="n">bonds</span><span class="p">():</span>
+            <span class="n">intermol_bond</span> <span class="o">=</span> <span class="n">InterMolBond</span><span class="p">(</span><span class="n">atom1</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">atom2</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">molecule_type</span><span class="o">.</span><span class="n">bonds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">intermol_bond</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selection</span><span class="p">,</span> <span class="n">integer_types</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">())[</span><span class="n">selection</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selection</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">descr</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">)</span>
+        <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:d}</span><span class="s1"> particles, &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_particles</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">):</span>
+                <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;periodicity: </span><span class="si">{}</span><span class="s1">, &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;non-periodic, &#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;pos=(</span><span class="si">{: .4f}</span><span class="s1">,</span><span class="si">{: .4f}</span><span class="s1">,</span><span class="si">{: .4f}</span><span class="s1">), &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+        <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:d}</span><span class="s1"> bonds, &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bonds</span><span class="p">))</span>
+
+        <span class="n">descr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;id: </span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">descr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clone_of</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root_container</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A faster alternative to deepcopying.</span>
+
+<span class="sd">        Does not resolve circular dependencies. This should be safe provided</span>
+<span class="sd">        you never try to add the top of a Compound hierarchy to a</span>
+<span class="sd">        sub-Compound. Clones compound hierarchy only, not the bonds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">root_container</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root_container</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">clone_of</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">clone_of</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="c1"># If this compound has already been cloned, return that.</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">in</span> <span class="n">clone_of</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">clone_of</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+
+        <span class="c1"># Otherwise we make a new clone.</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">newone</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+        <span class="c1"># Remember that we&#39;re cloning the new one of self.</span>
+        <span class="n">clone_of</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span> <span class="o">=</span> <span class="n">newone</span>
+
+        <span class="n">newone</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodicity</span><span class="p">)</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">_pos</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pos</span><span class="p">)</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">)</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">port_particle</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port_particle</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">):</span>
+            <span class="n">newone</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">newone</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newone</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+        <span class="c1"># Parent should be None initially.</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">referrers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">newone</span><span class="o">.</span><span class="n">bond_graph</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Add children to clone.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="n">newchild</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">_clone</span><span class="p">(</span><span class="n">clone_of</span><span class="p">,</span> <span class="n">root_container</span><span class="p">)</span>
+                <span class="n">newone</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">newchild</span><span class="p">)</span>
+                <span class="n">newchild</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">newone</span>
+
+        <span class="c1"># Copy labels, except bonds with atoms outside the hierarchy.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">compound</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compound</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">newone</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">compound</span><span class="o">.</span><span class="n">_clone</span><span class="p">(</span><span class="n">clone_of</span><span class="p">,</span> <span class="n">root_container</span><span class="p">)</span>
+                    <span class="n">compound</span><span class="o">.</span><span class="n">referrers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clone_of</span><span class="p">[</span><span class="n">compound</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># compound is a list of compounds, so we create an empty</span>
+                    <span class="c1"># list, and add the clones of the original list elements.</span>
+                    <span class="n">newone</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">subpart</span> <span class="ow">in</span> <span class="n">compound</span><span class="p">:</span>
+                        <span class="n">newone</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subpart</span><span class="o">.</span><span class="n">_clone</span><span class="p">(</span><span class="n">clone_of</span><span class="p">,</span> <span class="n">root_container</span><span class="p">))</span>
+                        <span class="c1"># Referrers must have been handled already, or the will be handled</span>
+
+        <span class="k">return</span> <span class="n">newone</span>
+
+    <span class="k">def</span> <span class="nf">_clone_bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clone_of</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">newone</span> <span class="o">=</span> <span class="n">clone_of</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span><span class="p">():</span>
+            <span class="n">newone</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">clone_of</span><span class="p">[</span><span class="n">c1</span><span class="p">],</span> <span class="n">clone_of</span><span class="p">[</span><span class="n">c2</span><span class="p">]))</span></div>
+
+<span class="n">Particle</span> <span class="o">=</span> <span class="n">Compound</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2017, Vanderbilt University.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.6.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

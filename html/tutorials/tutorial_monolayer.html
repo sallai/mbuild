@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Monolayer: Complex hierarchies, patterns, tiling and writing to files &mdash; mbuild 0.6.0.dev0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mbuild 0.6.0.dev0 documentation" href="../index.html"/>
+        <link rel="up" title="Tutorials" href="tutorials.html"/>
+        <link rel="next" title="Point Particles: Basic system initialization" href="tutorial_simple_LJ.html"/>
+        <link rel="prev" title="Ethane: Reading from files, Ports and coordinate transforms" href="tutorial_ethane.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mbuild
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0.dev0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tutorial_methane.html">Methane: Atoms, Bonds and Compounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_ethane.html">Ethane: Reading from files, Ports and coordinate transforms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Monolayer: Complex hierarchies, patterns, tiling and writing to files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_simple_LJ.html">Point Particles: Basic system initialization</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data_structures.html">Data Structure</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coordinate_transforms.html">Coordinate transformations</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../recipes.html">Recipes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">mbuild</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+      
+    <li>Monolayer: Complex hierarchies, patterns, tiling and writing to files</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorials/tutorial_monolayer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="monolayer-complex-hierarchies-patterns-tiling-and-writing-to-files">
+<h1>Monolayer: Complex hierarchies, patterns, tiling and writing to files<a class="headerlink" href="#monolayer-complex-hierarchies-patterns-tiling-and-writing-to-files" title="Permalink to this headline">¶</a></h1>
+<p>Run this interactively by downloading the IPython Notebook file <a class="reference download internal" href="../_downloads/tutorial_monolayer.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial_monolayer.ipynb</span></code></a> and <a class="reference download internal" href="../_downloads/ch3.pdb" download=""><code class="xref download docutils literal"><span class="pre">ch3.pdb</span></code></a>.</p>
+
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<h2 id="Monolayer:-Complex-hierarchies,-patterns,-tiling-and-writing-to-files">Monolayer: Complex hierarchies, patterns, tiling and writing to files<a class="anchor-link" href="#Monolayer:-Complex-hierarchies,-patterns,-tiling-and-writing-to-files">&#182;</a></h2><p><strong>Note</strong>: mBuild expects all distance units to be in nanometers.</p>
+<p>In this example, we'll cover assembling more complex hierarchies of components using patterns, tiling and how to output systems to files. To illustrate these concepts, let's build an alkane monolayer on a crystalline substrate.</p>
+<p>First, let's build our monomers and functionalized them with a silane group which we can then attach to the substrate. The <code>Alkane</code> example uses the <code>polymer</code> tool to combine <code>CH2</code> and <code>CH3</code> repeat units. You also have the option to cap the front and back of the chain or to leave a <code>CH2</code> group with a dangling port. The <code>Silane</code> compound is a Si(OH)<sub>2</sub> group with two ports facing out from the central Si. Lastly, we combine <code>alkane</code> with <code>silane</code> and add a label to <code>AlkylSilane</code> which points to, <code>silane['down']</code>. This allows us to reference it later using <code>AlkylSilane['down']</code> rather than <code>AlkylSilane['silane']['down']</code>.</p>
+<p><strong>Note:</strong> In <code>Compounds</code> with multiple <code>Ports</code>, by convention, we try to label every <code>Port</code> successively as 'up', 'down', 'left', 'right', 'front', 'back' which should roughly correspond to their relative orientations. This is a bit tricky to enforce because the system is so flexible so use your best judgement and try to be consistent! The more components we collect in our library with the same labeling conventions, the easier it becomes to build ever more complex structures.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[1]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+
+<span class="kn">from</span> <span class="nn">mbuild.examples</span> <span class="k">import</span> <span class="n">Alkane</span>
+<span class="kn">from</span> <span class="nn">mbuild.lib.moieties</span> <span class="k">import</span> <span class="n">Silane</span>
+
+
+<span class="k">class</span> <span class="nc">AlkylSilane</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A silane functionalized alkane chain with one Port. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chain_length</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AlkylSilane</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="n">alkane</span> <span class="o">=</span> <span class="n">Alkane</span><span class="p">(</span><span class="n">chain_length</span><span class="p">,</span> <span class="n">cap_end</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">alkane</span><span class="p">,</span> <span class="s1">&#39;alkane&#39;</span><span class="p">)</span>
+        <span class="n">silane</span> <span class="o">=</span> <span class="n">Silane</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">silane</span><span class="p">,</span> <span class="s1">&#39;silane&#39;</span><span class="p">)</span>
+        <span class="n">mb</span><span class="o">.</span><span class="n">equivalence_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;alkane&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;alkane&#39;</span><span class="p">][</span><span class="s1">&#39;down&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;silane&#39;</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Hoist silane port to AlkylSilane level.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">silane</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">],</span> <span class="s1">&#39;down&#39;</span><span class="p">,</span> <span class="n">containment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[2]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">AlkylSilane</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Now let's create a substrate to which we can later attach our monomers:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[3]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">mbuild</span> <span class="k">as</span> <span class="nn">mb</span>
+<span class="kn">from</span> <span class="nn">mbuild.lib.surfaces</span> <span class="k">import</span> <span class="n">Betacristobalite</span>
+
+<span class="n">surface</span> <span class="o">=</span> <span class="n">Betacristobalite</span><span class="p">()</span>
+<span class="n">tiled_surface</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">TiledCompound</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="n">n_tiles</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Here we've imported a beta-cristobalite surface from our component library. The <code>TiledCompound</code> tool allows you replicate any <code>Compound</code> in the x-, y-
+and z-directions by any number of times - 2, 1 and 1 for our case.</p>
+<p>Next, let's create our monomer and a hydrogen atom that we'll place on unoccupied surface sites:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[4]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">mbuild.lib.atoms</span> <span class="k">import</span> <span class="n">H</span>
+<span class="n">alkylsilane</span> <span class="o">=</span> <span class="n">AlkylSilane</span><span class="p">(</span><span class="n">chain_length</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">hydrogen</span> <span class="o">=</span> <span class="n">H</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Then we need to tell mBuild how to arrange the chains on the surface. This is accomplished with the "pattern" tools. Every pattern is just a collection of points. There are all kinds of patterns like spherical, 2D, regular, irregular etc. When you use the <code>apply_pattern</code> command, you effectively superimpose the pattern onto the host compound, mBuild figures out what the closest ports are to the pattern points and then attaches copies of the guest onto the binding sites identified by the pattern:</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[5]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pattern</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Grid2DPattern</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># Evenly spaced, 2D grid of points.</span>
+
+<span class="c1"># Attach chains to specified binding sites. Other sites get a hydrogen.</span>
+<span class="n">chains</span><span class="p">,</span> <span class="n">hydrogens</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">apply_to_compound</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">tiled_surface</span><span class="p">,</span> <span class="n">guest</span><span class="o">=</span><span class="n">alkylsilane</span><span class="p">,</span> <span class="n">backfill</span><span class="o">=</span><span class="n">hydrogen</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing text_cell rendered">
+<div class="jupyter prompt input_prompt">
+</div>
+<div class="jupyter inner_cell">
+<div class="jupyter text_cell_render border-box-sizing rendered_html">
+<p>Also note the <code>backfill</code> optional argument which allows you to place a different compound on any unused ports. In this case we want to backfill with hydrogen atoms on every port without a chain.</p>
+<p>And that's it! Check out <code>examples.alkane_monolayer</code> for the fully wrapped class.</p>
+
+</div>
+</div>
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[6]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">monolayer</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">Compound</span><span class="p">([</span><span class="n">tiled_surface</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">hydrogens</span><span class="p">])</span>
+<span class="n">monolayer</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span> <span class="c1"># Warning: may be slow in IPython notebooks</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Save as .mol2 file</span>
+<span class="n">monolayer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;monolayer.mol2&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="jupyter cell border-box-sizing code_cell rendered">
+<div class=" jupyter input">
+<div class="jupyter prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jupyter inner_cell">
+    <div class="jupyter input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div><p>(<a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_monolayer/tutorial_monolayer.ipynb">tutorial_monolayer.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_monolayer/tutorial_monolayer_eval.ipynb">tutorial_monolayer_eval.ipynb</a>; <a class="reference external" href="/Users/sallai/mbuild/docs/_build/html/docs/tutorials/tutorial_monolayer/tutorial_monolayer.py">tutorial_monolayer.py</a>)</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial_simple_LJ.html" class="btn btn-neutral float-right" title="Point Particles: Basic system initialization" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial_ethane.html" class="btn btn-neutral" title="Ethane: Reading from files, Ports and coordinate transforms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2017, Vanderbilt University.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.6.0.dev0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
