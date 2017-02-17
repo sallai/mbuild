@@ -19,9 +19,11 @@ class TestCompound(BaseTest):
 
     def test_save(self):
         methyl = mb.load(get_fn('methyl.pdb'))
-        outfile = 'methyl_out.pdb'
-        methyl.save(filename=outfile)
-        assert os.path.exists(outfile)
+        extensions = ['.xyz', '.pdb', '.mol2']
+        for ext in extensions:
+            outfile = 'methyl_out' + ext
+            methyl.save(filename=outfile)
+            assert os.path.exists(outfile)
 
     def test_batch_add(self, ethane, h2o):
         compound = mb.Compound()
@@ -41,7 +43,7 @@ class TestCompound(BaseTest):
 
     def test_init_with_subcompounds3(self, ethane, h2o):
         compound = mb.Compound([ethane, [h2o, mb.clone(h2o)]])
-        assert compound.n_particles == 8 + 2*3
+        assert compound.n_particles == 8 + 2 * 3
         assert compound.n_bonds == 7 + 2 * 2
 
     def test_init_with_bad_name(self):
@@ -107,7 +109,7 @@ class TestCompound(BaseTest):
 
     def test_remove_no_bond_graph(self):
         compound = mb.Compound()
-        particle = mb.Compound(name='C', pos=[0,0,0])
+        particle = mb.Compound(name='C', pos=[0, 0, 0])
         compound.add(particle, 'test-particle')
         compound.remove(particle)
         assert particle not in compound.particles()
@@ -272,11 +274,11 @@ class TestCompound(BaseTest):
     def test_parmed_element_guess(self):
         compound = mb.Particle(name='foobar')
         with pytest.warns(UserWarning):
-            structure = compound.to_parmed()
+            _ = compound.to_parmed()
 
         compound = mb.Particle(name='XXXXXX')
         with pytest.warns(UserWarning):
-            structure = compound.to_parmed()
+            _ = compound.to_parmed()
 
     def test_min_periodic_dist(self, ethane):
         compound = mb.Compound(ethane)

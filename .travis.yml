@@ -1,30 +1,30 @@
 language: generic
+
 sudo: false
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
+
+matrix:
+  include:
+    - { os: linux, env: PYTHON_VERSION=2.7 }
+    - { os: linux, env: PYTHON_VERSION=3.4 }
+    - { os: linux, env: PYTHON_VERSION=3.5 }
+    - { os: osx, env: PYTHON_VERSION=3.5 }
+
+env:
+  global:
+  - ENCRYPTION_LABEL: "898e0934cf65"
+  - COMMIT_AUTHOR_EMAIL: "janos.sallai@vanderbilt.edu"
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install md5sha1sum; fi
+  - git fetch -t
   - source devtools/travis-ci/install.sh
-  - pip install -e .
+  - conda config --add channels omnia
+  - conda config --add channels janschulz
+  - conda config --add channels bioconda
+  - conda config --add channels glotzer
 
 script:
-  - cd mbuild/tests
-  - py.test -v
-  - cd ../examples
-  - py.test test_examples.py -v
+  - conda build --python $PYTHON_VERSION devtools/conda-recipe
 
-os:
-  - osx
-  - linux
-
-env:
-  matrix:
-    - PYTHON_VERSION=2.7
-    - PYTHON_VERSION=3.4
-    - PYTHON_VERSION=3.5
-
-
-
+after_success:
+  - if [[ $PYTHON_VERSION == 3.5 ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source devtools/travis-ci/update_gh_pages.sh; fi

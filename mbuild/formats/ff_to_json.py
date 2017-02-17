@@ -48,7 +48,8 @@ def write_forcefield(structure, filename, ref_distance=1.0, ref_energy=1.0):
             temp_dict['epsilon'] = round(key[1].epsilon,3) / ref_energy
             temp_dict['sigma'] = round(key[1].sigma,3) / ref_distance
             pair_data[key[0]] = temp_dict
-        pair_data = OrderedDict(sorted(pair_data.items(), key=lambda(key,value):int(key.split('_')[1])))
+        pair_data = OrderedDict(sorted(pair_data.items(),
+                                       key=lambda p: int(p[0].split('_')[1])))
 
         # Bonds
         bonds = [bond for bond in structure.bonds]
@@ -101,8 +102,11 @@ def write_forcefield(structure, filename, ref_distance=1.0, ref_energy=1.0):
             
         ff_data['styles'] = styles
         ff_data['pair_coeffs'] = pair_data
-        ff_data['bond_coeffs'] = bond_data
-        ff_data['angle_coeffs'] = angle_data
-        ff_data['dihedral_coeffs'] = dihedral_data
+        if bonds:
+            ff_data['bond_coeffs'] = bond_data
+        if angles:
+            ff_data['angle_coeffs'] = angle_data
+        if dihedrals:
+            ff_data['dihedral_coeffs'] = dihedral_data
 
         json.dump(ff_data,f,indent=4)
